@@ -35,7 +35,7 @@ export function bindInk(root,row,persist) {
   const input=root.querySelector('.ink-value');
   if(!input)return;
   const boxes=[...root.querySelectorAll('.ink-box')];
-  const update=()=>{row.draft=input.value;persist();root.querySelector('[data-do="ink-submit"]').disabled=!input.value};
+  const update=()=>{row.draft=input.value;const cell=root.querySelector(".current .answerbox");if(cell)cell.textContent=input.value||"　";persist();root.querySelector('[data-do="ink-submit"]').disabled=!input.value};
   input.oninput=()=>{input.value=input.value.replace(/\D/g,'').slice(0,4);update()};
   const strokes=row.strokes??=boxes.map(()=>[]);
   boxes.forEach((canvas,index)=>{

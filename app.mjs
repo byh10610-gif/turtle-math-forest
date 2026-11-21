@@ -233,7 +233,7 @@ function sheetView(){
   return '<main class="desk"><header class="sheethead"><div><small>'+names.older+'의 연산 노트</small><h1>'+stageName(s.level)+'</h1></div>'+act('home','저장하고 닫기','chip')+'</header><div class="spread"><section class="paper">'+s.questions.slice(offset,offset+5).map((item,j)=>{
     const n=offset+j,r=rows[n],prompt=sheetPrompt(item);
     return '<div class="sumline '+(n===i?'current':'')+'"><small>'+String(n+1).padStart(2,'0')+'</small><strong class="'+(prompt.length>17?'long':'')+'">'+prompt+'</strong>'+act('ink-row:'+n,r.correct?'✓ '+r.draft:r.draft||'　','answerbox','aria-label="'+(n+1)+'번 답 쓰기"')+'</div>';
-  }).join('')+'</section><aside class="writing"><div class="stamp"><img src="./icon-192.png" alt="거북이"><b>'+stamp+'</b></div>'+
+  }).join('')+'</section><aside class="writing"><div class="stamp '+(stamp==='참 잘했어요!'?'praised':'')+'"><img src="./icon-192.png" alt="거북이"><b>'+stamp+'</b></div>'+
   (!row.correct?'<h2>'+(i+1)+'번 답 쓰기</h2><p>왼쪽 칸부터 한 자리씩 써요.</p><div class="inkboxes">'+Array.from({length:Math.max(2,String(q.answer).length)},()=>'<canvas class="ink-box" width="128" height="128"></canvas>').join('')+'</div><label>읽은 숫자 <input inputmode="numeric" maxlength="4" class="ink-value" value="'+row.draft+'" placeholder="직접 입력"></label><div class="compact">'+act('ink-clear','다시 쓰기','chip')+act('ink-submit','답 확인','button primary',row.draft?'':'disabled')+'</div>'+act('ink-hint','도움 보기','quiet')+(row.hint?'<p>'+q.hint+'</p>':'')+(s.kind==='check'?act('ink-skip','아직 모르겠어요','quiet'):''):act('ink-next',count===rows.length?'결과 보기':'다음 문제','button primary'))+
   '<small class="sheetcount">'+count+' / '+rows.length+' 완료</small></aside></div></main>';
 }
@@ -314,7 +314,7 @@ function start(kind) {
   if(child==='older')for(const q of questions){
     if(q.compare){const values=q.cards.map(card=>card.quantity);q.answer=q.cards[q.answer-1].quantity;
       q.instruction=values.join(' · ')+' 중 '+(q.instruction.includes('많은')?'큰 수':'작은 수')+'를 써요.';delete q.cards;}
-    else if(q.variant==='story'){q.answer=q.op==='+'?q.a+q.b:q.a-q.b;q.instruction+=' 남은 개수는 얼마일까요?';delete q.cards;}
+    else if(q.variant==='story'){q.answer=q.op==='+'?q.a+q.b:q.a-q.b;q.instruction+=q.op==='+'?' 모두 몇 개일까요?':' 몇 개 남았을까요?';delete q.cards;}
   }
   p.active={kind,level,topic,questions,index:0,attempt:emptyAttempt(),items:[]};
   persist();
