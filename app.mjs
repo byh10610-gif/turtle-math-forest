@@ -192,7 +192,7 @@ function gardenView() {
   }).join('');
   return '<main class="page"><div class="trail">'+act('home',names[child]+'의 숲','quiet')+'</div><div class="page-heading"><div><h1>'+names[child]+'의 정원</h1>'+
     muted(p.rewards?'자리를 누르고 꽃이나 친구를 골라요.':'문제를 한 묶음 풀면 정원에 친구가 찾아와요.')+'</div><span class="range">보상 '+p.rewards+'개</span></div>'+
-    '<section class="garden"><div class="garden-plots">'+Array.from({length:12},(_,i)=>act('slot:'+i,p.garden[i]!=null?icon(decorations[p.garden[i]]):'<span aria-hidden="true">＋</span>','plot'+(slot===i?' selected':''),'aria-label="정원 자리 '+(i+1)+'" aria-pressed="'+(slot===i)+'"')).join('')+'</div></section>'+
+    '<section class="garden habitat"><div class="garden-plots">'+Array.from({length:12},(_,i)=>act('slot:'+i,p.garden[i]!=null?icon(decorations[p.garden[i]]):'<span aria-hidden="true">＋</span>','plot'+(slot===i?' selected':''),'aria-label="정원 자리 '+(i+1)+'" aria-pressed="'+(slot===i)+'"')).join('')+'</div><button class="resident" aria-label="거북이에게 인사하기"><span class="critter">🐢</span><span class="bubble" aria-live="polite"></span></button></section>'+
     '<div class="garden-tray">'+available+(slot!==null&&p.garden[slot]!=null?act('unplant','거두기','button'):'')+'</div></main>';
 }
 function historyView() {
@@ -230,12 +230,12 @@ function sheetView(){
   const s=profile().active,rows=rowsFor(s),i=s.index,row=rows[i],q=s.questions[i],count=rows.filter(r=>r.correct).length;
   const offset=Math.floor(i/5)*5;
   const stamp=s.message || (row.correct?'참 잘했어요!':row.wrong?'다시 생각해 봐요.':'답칸을 눌러 써 봐요.');
-  return '<main class="desk"><header class="sheethead"><div><small>'+names.older+'의 연산 노트</small><h1>'+stageName(s.level)+'</h1></div>'+act('home','저장하고 닫기','chip')+'</header><div class="spread"><section class="paper">'+s.questions.slice(offset,offset+5).map((item,j)=>{
+  return '<main class="desk"><header class="sheethead"><div><small>'+names.older+'의 연산 노트</small><h1>'+stageName(s.level)+'</h1></div><label class="sheet-progress"><b>'+count+' / '+rows.length+' 완료</b><progress value="'+count+'" max="'+rows.length+'"></progress></label>'+act('home','저장하고 닫기','chip')+'</header><div class="spread"><section class="paper">'+s.questions.slice(offset,offset+5).map((item,j)=>{
     const n=offset+j,r=rows[n],prompt=sheetPrompt(item);
-    return '<div class="sumline '+(n===i?'current':'')+'"><small>'+String(n+1).padStart(2,'0')+'</small><strong class="'+(prompt.length>17?'long':'')+'">'+prompt+'</strong>'+act('ink-row:'+n,r.correct?'✓ '+r.draft:r.draft||'　','answerbox','aria-label="'+(n+1)+'번 답 쓰기"')+'</div>';
+    return '<div class="sumline '+(n===i?'current':'')+'"><small>'+String(n+1).padStart(2,'0')+'</small><strong class="'+(prompt.length>17?'long':'')+'">'+prompt+'</strong>'+act('ink-row:'+n,r.draft||'　','answerbox','aria-label="'+(n+1)+'번 답 쓰기"')+'</div>';
   }).join('')+'</section><aside class="writing"><div class="stamp '+(stamp==='참 잘했어요!'?'praised':'')+'"><img src="./icon-192.png" alt="거북이"><b>'+stamp+'</b></div>'+
-  (!row.correct?'<h2>'+(i+1)+'번 답 쓰기</h2><p>왼쪽 칸부터 한 자리씩 써요.</p><div class="inkboxes">'+Array.from({length:Math.max(2,String(q.answer).length)},()=>'<canvas class="ink-box" width="128" height="128"></canvas>').join('')+'</div><label>읽은 숫자 <input inputmode="numeric" maxlength="4" class="ink-value" value="'+row.draft+'" placeholder="직접 입력"></label><div class="compact">'+act('ink-clear','다시 쓰기','chip')+act('ink-submit','답 확인','button primary',row.draft?'':'disabled')+'</div>'+act('ink-hint','도움 보기','quiet')+(row.hint?'<p>'+q.hint+'</p>':'')+(s.kind==='check'?act('ink-skip','아직 모르겠어요','quiet'):''):act('ink-next',count===rows.length?'결과 보기':'다음 문제','button primary'))+
-  '<small class="sheetcount">'+count+' / '+rows.length+' 완료</small></aside></div></main>';
+  (!row.correct?'<h2>'+(i+1)+'번 답 쓰기</h2><p>왼쪽 칸부터 한 자리씩 써요.</p><div class="inkboxes">'+Array.from({length:Math.max(2,String(q.answer).length)},()=>'<canvas class="ink-box" width="128" height="128"></canvas>').join('')+'</div><output class="ink-value" hidden>'+row.draft+'</output><div class="compact">'+act('ink-clear','다시 쓰기','chip')+act('ink-submit','답 확인','button primary',row.draft?'':'disabled')+'</div>'+act('ink-hint','도움 보기','quiet')+(row.hint?'<p>'+q.hint+'</p>':'')+(s.kind==='check'?act('ink-skip','아직 모르겠어요','quiet'):''):act('ink-next',count===rows.length?'결과 보기':'다음 문제','button primary'))+
+  '</aside></div></main>';
 }
 function sheetAction(action,value) {
   const p=profile(),s=p.active,rows=rowsFor(s),i=s.index,r=rows[i],q=s.questions[i];
@@ -272,8 +272,32 @@ app.addEventListener('change',event=>{
 });
 
 
+let walkTimer, speechTimer;
+function visitGarden(turtle) {
+  const bubble=turtle.querySelector('.bubble');
+  const phrases=['같이 산책할래?', '연못 바람이 시원해!', '반가워!', '우리 정원이 참 좋아.'];
+  let step=0;
+  function walk(speak) {
+    const path=[[24,75],[65,67],[77,82],[39,70],[19,58]];
+    const [x,y]=path[step%path.length];
+    turtle.style.left=x+'%';
+    turtle.style.top=y+'%';
+    if(speak) {
+      bubble.textContent=phrases[step%phrases.length];
+      clearTimeout(speechTimer);
+      speechTimer=setTimeout(()=>{bubble.textContent=''},3200);
+    }
+    step++;
+  }
+  turtle.onclick=()=>walk(true);
+  walk(true);
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches)
+    walkTimer=setInterval(()=>walk(step%2===0),5200);
+}
 function render(focusAction) {
+  clearInterval(walkTimer);clearTimeout(speechTimer);
   app.innerHTML=header()+views[screen]()+ (warning?'<div role="alert" class="warning">'+warning+'</div>':'');
+  if(screen==='garden')visitGarden(app.querySelector('.resident'));
   if(child==='older'&&screen==='practice')bindInk(app,rowsFor(profile().active)[profile().active.index],persist);
   if (focusAction) {
     const target=[...app.querySelectorAll('button[data-do]')].find(node=>node.dataset.do===focusAction&&!node.disabled);
