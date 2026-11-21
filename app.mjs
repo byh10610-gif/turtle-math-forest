@@ -5,12 +5,10 @@ import {prepareGardenV2,withGardenLayout} from './garden/integration/legacy-adap
 import {bindInk} from './ink.mjs';
 import {groups,stages,labels,modes,variantsFor,batch,assessment,assess,record,reviewTargets,nextSuggestion,load,save,saveGardenLayout} from './math.mjs';
 import {ForestAudio,pulse} from './audio.mjs';
-import {profileNames} from './profile-names.mjs';
+import {names} from './profile-names.mjs';
 
 const app = document.querySelector('#app');
 const announce = document.querySelector('#announce');
-const {names,customized}=profileNames(localStorage,location.hash);
-if (customized) history.replaceState(null,'',location.pathname+location.search);
 const avatars = {older:'🐰',young:'🐥'};
 const decorations = ['🌼','🐞','🌷','🦋','🍄','🐿️','🪻','🦆','🌻','🐇','🍀','🪷'];
 const state = load(localStorage);
