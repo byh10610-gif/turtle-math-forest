@@ -1,4 +1,4 @@
-const version = 'turtle-forest-v10';
+const version = 'turtle-forest-v11';
 const assets = ['./','./index.html','./style.css','./app.mjs','./math.mjs','./audio.mjs','./profile-names.mjs','./manifest.webmanifest','./icon-192.png','./icon-512.png','./forest.webp','./piano.ogg','./digits.bin','./ink.mjs','./credits.txt',
   './garden/garden-engine.js',
   './garden/garden-geometry.js',

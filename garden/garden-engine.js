@@ -121,12 +121,12 @@
       actor.el.style.setProperty('--entity-size',actor.size+'px');
     }
     function renderPositions(){
-      turtleEl.style.transform=`translate3d(${turtle.x*worldRect.width-turtleSize*.50}px,${turtle.y*worldRect.height-turtleSize*.76}px,0)`;
+      turtleEl.style.translate=`${turtle.x*worldRect.width-turtleSize*.50}px ${turtle.y*worldRect.height-turtleSize*.76}px`;
       turtleEl.style.zIndex=String(60+Math.round(turtle.y*200));
       turtleEl.querySelector('.tg-art').style.transform=`scaleX(${turtle.face})`;
       for(const actor of actors.values()){
         const bob=(swimming(actor.item.kind)?Math.sin(clock*1.6+actor.phase)*2:0);
-        actor.el.style.transform=`translate3d(${actor.x*worldRect.width-actor.size*.5}px,${actor.y*worldRect.height-actor.size*.73-actor.lift+bob}px,0)`;
+        actor.el.style.translate=`${actor.x*worldRect.width-actor.size*.5}px ${actor.y*worldRect.height-actor.size*.73-actor.lift+bob}px`;
         actor.el.style.zIndex=String(flying(actor.item.kind)?330:swimming(actor.item.kind)?24:45+Math.round(actor.y*200));
         actor.el.querySelector('.tg-art').style.transform=`scaleX(${actor.face})`;
       }
