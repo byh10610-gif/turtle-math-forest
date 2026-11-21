@@ -1,0 +1,5 @@
+음악: Erik Satie, Gymnopédie No. 1. 연주 Kevin MacLeod (incompetech.com).
+https://incompetech.com/music/royalty-free/mp3-royaltyfree/Gymnopedie%20No%201.mp3
+Creative Commons Attribution 3.0 https://creativecommons.org/licenses/by/3.0/
+앱에서 오프라인 재생하도록 모노 Opus로 변환했습니다.
+손글씨 모델: MNIST 필기 숫자 자료(Yann LeCun, Corinna Cortes, Christopher J.C. Burges)로 학습한 소형 숫자 분류기.

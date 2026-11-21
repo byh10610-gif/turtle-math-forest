@@ -1,3 +1,4 @@
+import {bindInk} from './ink.mjs';
 import {groups,stages,labels,modes,variantsFor,batch,assessment,assess,record,reviewTargets,nextSuggestion,load,save} from './math.mjs';
 import {ForestAudio,pulse} from './audio.mjs';
 import {profileNames} from './profile-names.mjs';
@@ -62,10 +63,11 @@ function profilesView() {
     '<p class="welcome-copy">거북이와 함께, 내 속도로 수학을 배워요.</p><div class="profile-list">'+
     Object.keys(names).map(id=>act('child:'+id,
       '<span class="avatar '+id+'">'+icon(avatars[id])+'</span><span class="profile-text"><strong>'+names[id]+'의 숲</strong><small>'+
-      (state[id].active?'풀던 '+remaining(state[id])+'문제 이어 하기':state[id].history.length?'내 연습과 정원 보기':id==='older'?'큰 수식과 '+modes[state[id].mode]:'그림과 함께하는 수놀이')+'</small></span><span class="chevron" aria-hidden="true">›</span>','profile-card')).join('')+
+      (state[id].active?'풀던 '+remaining(state[id])+'문제 이어 하기':state[id].history.length?'내 연습과 정원 보기':id==='older'?'한 장씩 쓰는 연산 노트':'그림과 함께하는 수놀이')+'</small></span><span class="chevron" aria-hidden="true">›</span>','profile-card')).join('')+
     '</div><p class="privacy">'+icon('✦')+'연습 기록과 정원은 아이마다 따로 저장돼요.</p></section></main>';
 }
 function homeView() {
+  if(child==='older')return notebookHome();
   const p=profile();
   const advice=p.checkpoint;
   const next=recommendations(p.history,p.level,p.topic);
@@ -136,6 +138,7 @@ function cardMarkup(q,card,index,mode) {
   return number+'<strong>'+card.text+'</strong>';
 }
 function practiceView() {
+  if(child==='older')return sheetView();
   const p=profile(), s=p.active, q=s.questions[s.index], a=s.attempt;
   const locked=a.correct;
   const mode=p.mode;
@@ -201,8 +204,77 @@ function historyView() {
     last.map(x=>'<div class="history-row"><span><strong>'+stageName(x.level)+'</strong><small>'+(x.expression||x.instruction)+' · 정답 '+x.answer+'</small></span><span>'+status[x.status]+(x.hint&&x.status!=='hint'?' · 도움':'')+(x.wrong.length?' · 오답 '+x.wrong.join(', '):'')+'</span><time>'+x.day+'</time></div>').join('')+'</div>')+'</main>';
 }
 const views={profiles:profilesView,home:homeView,levels:levelsView,group:groupView,setup:setupView,settings:()=>setupView(true),practice:practiceView,result:resultView,garden:gardenView,history:historyView};
+function notebookHome() {
+  const p=profile();
+  const choices=groups.map(([title,,,ids])=>'<optgroup label="'+title+'">'+ids.map(id=>'<option value="'+id+'" '+(id===p.level?'selected':'')+'>'+levelName(id)+' · '+stageName(id)+'</option>').join('')+'</optgroup>').join('');
+  return '<main class="desk"><section class="bookcover"><div><small>연산 연습장</small><h1>'+names.older+'의 수학 노트</h1><p>오늘 풀어 볼 한 장을 골라요.</p><label>학습 단계<select id="notebook-stage">'+choices+'</select></label>'+act('resume',p.active?'풀던 연습 이어 하기':'연습장 펼치기','button primary')+'</div><img src="./forest.webp" alt="연못가의 거북이"></section><nav class="booknav">'+act('check','시작 확인','quiet')+act('review','오늘의 복습','quiet')+act('garden','나의 정원','quiet')+act('history','학습 기록','quiet')+'<a class="music-credit" href="./credits.txt" target="_blank">음악 · 자료 출처</a></nav></main>';
+}
+function rowsFor(s) {
+  if(!s.rows) s.rows=s.questions.map((q,i)=>{
+    const done=s.items[i];
+    return done?{...emptyAttempt(),correct:true,draft:String(q.answer),item:done}:i===s.index?{...s.attempt}:emptyAttempt();
+  });
+  return s.rows;
+}
+function sheetPrompt(q) {
+  if(q.cards)return q.instruction+' '+q.cards.map((c,i)=>(i+1)+'번 '+c.text).join(' · ');
+  if(q.variant==='relation')return q.instruction+' '+q.expression;
+  if(q.level===16)return q.expression+' · '+q.instruction;
+  if(q.level===3)return q.instruction;
+  if(q.expression)return q.expression.replace(/□$/,'');
+  if(q.visual)return q.visual.map(n=>'●'.repeat(n)).join('　');
+  if(q.level===1||q.topic==='zero')return q.answer?'● '.repeat(q.answer):'빈 바구니의 열매 수';
+  return q.instruction;
+}
+function sheetView(){
+  const s=profile().active,rows=rowsFor(s),i=s.index,row=rows[i],q=s.questions[i],count=rows.filter(r=>r.correct).length;
+  const offset=Math.floor(i/5)*5;
+  const stamp=s.message || (row.correct?'참 잘했어요!':row.wrong?'다시 생각해 봐요.':'답칸을 눌러 써 봐요.');
+  return '<main class="desk"><header class="sheethead"><div><small>'+names.older+'의 연산 노트</small><h1>'+stageName(s.level)+'</h1></div>'+act('home','저장하고 닫기','chip')+'</header><div class="spread"><section class="paper">'+s.questions.slice(offset,offset+5).map((item,j)=>{
+    const n=offset+j,r=rows[n],prompt=sheetPrompt(item);
+    return '<div class="sumline '+(n===i?'current':'')+'"><small>'+String(n+1).padStart(2,'0')+'</small><strong class="'+(prompt.length>17?'long':'')+'">'+prompt+'</strong>'+act('ink-row:'+n,r.correct?'✓ '+r.draft:r.draft||'　','answerbox','aria-label="'+(n+1)+'번 답 쓰기"')+'</div>';
+  }).join('')+'</section><aside class="writing"><div class="stamp"><img src="./icon-192.png" alt="거북이"><b>'+stamp+'</b></div>'+
+  (!row.correct?'<h2>'+(i+1)+'번 답 쓰기</h2><p>왼쪽 칸부터 한 자리씩 써요.</p><div class="inkboxes">'+Array.from({length:Math.max(2,String(q.answer).length)},()=>'<canvas class="ink-box" width="128" height="128"></canvas>').join('')+'</div><label>읽은 숫자 <input inputmode="numeric" maxlength="4" class="ink-value" value="'+row.draft+'" placeholder="직접 입력"></label><div class="compact">'+act('ink-clear','다시 쓰기','chip')+act('ink-submit','답 확인','button primary',row.draft?'':'disabled')+'</div>'+act('ink-hint','도움 보기','quiet')+(row.hint?'<p>'+q.hint+'</p>':'')+(s.kind==='check'?act('ink-skip','아직 모르겠어요','quiet'):''):act('ink-next',count===rows.length?'결과 보기':'다음 문제','button primary'))+
+  '<small class="sheetcount">'+count+' / '+rows.length+' 완료</small></aside></div></main>';
+}
+function sheetAction(action,value) {
+  const p=profile(),s=p.active,rows=rowsFor(s),i=s.index,r=rows[i],q=s.questions[i];
+  if(action==='ink-row'){s.index=Number(value);s.message='';}
+  if(action==='ink-clear'){r.strokes=[];r.draft='';s.message='';}
+  if(action==='ink-hint')r.hint=true;
+  if(action==='ink-submit'||action==='ink-skip'){
+    if(r.correct||(!r.draft&&action==='ink-submit'))return;
+    const skip=action==='ink-skip';
+    if(!skip)r.answers.push(Number(r.draft));
+    r.correct=skip||Number(r.draft)===q.answer;r.wrong=!r.correct;
+    if(!skip)feedback(r.correct?'right':'wrong');
+    s.message=skip?'다음에 다시 만나요.':r.correct?'참 잘했어요!':'다시 생각해 봐요.';
+    if(r.correct){
+      r.item=record(q,r.answers,r.hint,skip);
+      if(s.kind!=='check')p.history.push(r.item);
+      s.items=rows.filter(x=>x.item).map(x=>x.item);
+      const next=rows.findIndex(x=>!x.correct);
+      if(next>=0)s.index=next;
+    }else{r.strokes=[];r.draft='';}
+  }
+  if(action==='ink-next'){
+    const next=rows.findIndex(x=>!x.correct);
+    if(next<0){s.index=rows.length-1;s.attempt={...rows.at(-1),correct:true};advance();return;}
+    s.index=next;s.message='';
+  }
+  s.attempt=rows[s.index];persist();render();
+}
+app.addEventListener('change',event=>{
+  if(event.target.id==='notebook-stage'){
+    arrangement={level:Number(event.target.value),topic:'mixed',mode:'pad',format:'basic'};
+    start('practice');
+  }
+});
+
+
 function render(focusAction) {
   app.innerHTML=header()+views[screen]()+ (warning?'<div role="alert" class="warning">'+warning+'</div>':'');
+  if(child==='older'&&screen==='practice')bindInk(app,rowsFor(profile().active)[profile().active.index],persist);
   if (focusAction) {
     const target=[...app.querySelectorAll('button[data-do]')].find(node=>node.dataset.do===focusAction&&!node.disabled);
     target?.focus({preventScroll:true});
@@ -239,6 +311,11 @@ function start(kind) {
   }
   if (kind==='practice') Object.assign(p,{level,topic,mode,format});
   const questions=kind==='check'?assessment(child):batch(level,topic,format,kind==='review'?reviewTargets(p.history):[]);
+  if(child==='older')for(const q of questions){
+    if(q.compare){const values=q.cards.map(card=>card.quantity);q.answer=q.cards[q.answer-1].quantity;
+      q.instruction=values.join(' · ')+' 중 '+(q.instruction.includes('많은')?'큰 수':'작은 수')+'를 써요.';delete q.cards;}
+    else if(q.variant==='story'){q.answer=q.op==='+'?q.a+q.b:q.a-q.b;q.instruction+=' 남은 개수는 얼마일까요?';delete q.cards;}
+  }
   p.active={kind,level,topic,questions,index:0,attempt:emptyAttempt(),items:[]};
   persist();
   go('practice');
@@ -320,6 +397,7 @@ app.addEventListener('click',event=>{
   if (action==='child') {child=value;go('home');return;}
   if (!child) return;
   const p=profile();
+  if(action.startsWith('ink-')){sheetAction(action,value);return;}
   switch (action) {
     case 'home': go('home');break;
     case 'levels': go('levels');break;
@@ -376,7 +454,7 @@ function handleKey(value) {
   render('key:'+value);
 }
 document.addEventListener('keydown',event=>{
-  if (screen!=='practice'||profile().mode!=='pad'||profile().active.attempt.correct||event.ctrlKey||event.altKey||event.metaKey) return;
+  if (child==='older'||screen!=='practice'||profile().mode!=='pad'||profile().active.attempt.correct||event.ctrlKey||event.altKey||event.metaKey) return;
   if (/^\d$/.test(event.key)) {event.preventDefault();feedback('tap');handleKey(event.key);}
   else if (event.key==='Backspace') {event.preventDefault();feedback('tap');handleKey('del');}
   else if (event.key==='Enter'&&document.activeElement?.tagName!=='BUTTON') {event.preventDefault();handleKey('submit');}
