@@ -1,5 +1,13 @@
-const version = 'turtle-forest-v6';
-const assets = ['./','./index.html','./style.css','./app.mjs','./math.mjs','./audio.mjs','./profile-names.mjs','./manifest.webmanifest','./icon-192.png','./icon-512.png','./forest.webp','./piano.ogg','./digits.bin','./ink.mjs','./credits.txt'];
+const version = 'turtle-forest-v9';
+const assets = ['./','./index.html','./style.css','./app.mjs','./math.mjs','./audio.mjs','./profile-names.mjs','./manifest.webmanifest','./icon-192.png','./icon-512.png','./forest.webp','./piano.ogg','./digits.bin','./ink.mjs','./credits.txt',
+  './garden/garden-engine.js',
+  './garden/garden-geometry.js',
+  './garden/garden.css',
+  './garden/assets/characters.js',
+  './garden/assets/characters.css',
+  './garden/integration/legacy-adapter.mjs',
+  './garden/assets/garden-background.webp'
+];
 self.addEventListener('install',event => {
   event.waitUntil(caches.open(version).then(cache=>cache.addAll(assets.map(path=>new Request(path,{cache:"reload"})))).then(()=>self.skipWaiting()));
 });

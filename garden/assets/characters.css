@@ -1,0 +1,66 @@
+/* Art-only motion. Runtime owns world position, heading and lifecycle. */
+.garden-art { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.art-turtle .turtle-shell { transform-origin: 100px 146px; animation: garden-turtle-breathe 3.8s ease-in-out infinite; }
+.art-turtle .turtle-head { transform-origin: 160px 137px; animation: garden-turtle-curious 5.7s ease-in-out infinite; }
+.art-turtle .turtle-eyes { transform-box: fill-box; transform-origin: center; animation: garden-turtle-blink 6.2s linear infinite; }
+.art-turtle .turtle-closed-eyes { opacity: 0; }
+.art-turtle .turtle-leg-front, .art-turtle .turtle-leg-front-far { transform-origin: 143px 145px; }
+.art-turtle .turtle-leg-back, .art-turtle .turtle-leg-back-far { transform-origin: 74px 145px; }
+.is-walking .art-turtle .turtle-leg-front, .is-walking .art-turtle .turtle-leg-back-far { animation: garden-turtle-step .95s ease-in-out infinite; }
+.is-walking .art-turtle .turtle-leg-back, .is-walking .art-turtle .turtle-leg-front-far { animation: garden-turtle-step .95s ease-in-out -.475s infinite; }
+.is-walking .art-turtle .turtle-rig { animation: garden-turtle-bob .95s ease-in-out infinite; }
+.is-walking .art-turtle .turtle-head { animation: garden-turtle-nod .95s ease-in-out infinite; }
+.is-happy .art-turtle .turtle-head { animation: garden-turtle-delight .6s ease-in-out 3; }
+.is-happy .art-turtle .turtle-leg-front { animation: garden-turtle-wave .48s ease-in-out 4; }
+.is-happy .art-turtle .turtle-eyes, .is-sleeping .art-turtle .turtle-eyes { opacity: 0; }
+.is-happy .art-turtle .turtle-closed-eyes, .is-sleeping .art-turtle .turtle-closed-eyes { opacity: 1; }
+.is-sleeping .art-turtle .turtle-head { transform: rotate(7deg) translateY(4px); animation: garden-turtle-sleep 4s ease-in-out infinite; }
+.is-sleeping .art-turtle .turtle-closed-eyes { transform: translateY(-1px) scaleY(-1); transform-box: fill-box; transform-origin: center; }
+.ladybug-wing-left { transform-origin: 78px 57px; }
+.ladybug-wing-right { transform-origin: 82px 57px; }
+.is-flying .ladybug-wing-left { animation: garden-ladybug-left .13s ease-in-out infinite alternate; }
+.is-flying .ladybug-wing-right { animation: garden-ladybug-right .13s ease-in-out infinite alternate; }
+.butterfly-wing-left { transform-origin: 80px 84px; animation: garden-wing-left 1.1s ease-in-out infinite; }
+.butterfly-wing-right { transform-origin: 80px 84px; animation: garden-wing-right 1.1s ease-in-out infinite; }
+.is-flying .butterfly-wing-left, .is-flying .butterfly-wing-right { animation-duration: .32s; }
+.fish-tail { transform-origin: 48px 82px; animation: garden-fish-tail .85s ease-in-out infinite; }
+.fish-fin { transform-origin: 88px 85px; animation: garden-fish-fin 1.2s ease-in-out infinite; }
+.flower-head { transform-origin: 80px 102px; animation: garden-flower-sway 6s ease-in-out infinite; }
+.tree-canopy { transform-origin: 111px 150px; animation: garden-tree-sway 8.3s ease-in-out infinite; }
+.lotus-flower { transform-origin: 80px 103px; animation: garden-flower-sway 7.2s ease-in-out infinite; }
+.tiny-wing-left { transform-origin: 80px 77px; animation: garden-tiny-wing .15s ease-in-out infinite alternate; }
+.tiny-wing-right { transform-origin: 80px 77px; animation: garden-tiny-wing .15s ease-in-out -.075s infinite alternate; }
+.firefly-glow { animation: garden-glow 3.7s ease-in-out infinite; }
+.firefly-light { animation: garden-glow-core 3.7s ease-in-out infinite; }
+.squirrel-tail { transform-origin: 56px 128px; animation: garden-tail-sway 5.4s ease-in-out infinite; }
+.rabbit-head { transform-origin: 88px 98px; animation: garden-rabbit-curious 6.3s ease-in-out infinite; }
+.duck-wing { transform-origin: 56px 110px; animation: garden-duck-wing 5.8s ease-in-out infinite; }
+
+@keyframes garden-turtle-breathe { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.016); } }
+@keyframes garden-turtle-curious { 0%,35%,100% { transform: rotate(0); } 48%,65% { transform: rotate(-3deg) translateY(-1px); } }
+@keyframes garden-turtle-blink { 0%,44%,47%,88%,91%,100% { transform: scaleY(1); } 45.5%,89.5% { transform: scaleY(.07); } }
+@keyframes garden-turtle-step { 0%,100% { transform: rotate(-7deg) translateX(-1px); } 50% { transform: rotate(7deg) translate(2px,-2px); } }
+@keyframes garden-turtle-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes garden-turtle-nod { 0%,100% { transform: rotate(-1deg); } 50% { transform: rotate(2deg) translateY(-1px); } }
+@keyframes garden-turtle-delight { 0%,100% { transform: rotate(0); } 50% { transform: rotate(-5deg) translateY(-3px); } }
+@keyframes garden-turtle-wave { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(-27deg) translate(2px,-3px); } }
+@keyframes garden-turtle-sleep { 0%,100% { transform: rotate(7deg) translateY(4px); } 50% { transform: rotate(8deg) translateY(5px); } }
+@keyframes garden-ladybug-left { from { transform: rotate(-28deg); } to { transform: rotate(-58deg); } }
+@keyframes garden-ladybug-right { from { transform: rotate(28deg); } to { transform: rotate(58deg); } }
+@keyframes garden-wing-left { 0%,100% { transform: scaleX(1) rotate(-2deg); } 50% { transform: scaleX(.5) rotate(4deg); } }
+@keyframes garden-wing-right { 0%,100% { transform: scaleX(1) rotate(2deg); } 50% { transform: scaleX(.5) rotate(-4deg); } }
+@keyframes garden-fish-tail { 0%,100% { transform: scaleX(1) rotate(-5deg); } 50% { transform: scaleX(.8) rotate(5deg); } }
+@keyframes garden-fish-fin { 0%,100% { transform: rotate(-5deg); } 50% { transform: rotate(12deg) scaleX(.8); } }
+@keyframes garden-flower-sway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+@keyframes garden-tree-sway { 0%,100% { transform: rotate(-.45deg); } 50% { transform: rotate(.65deg); } }
+@keyframes garden-tiny-wing { from { transform: scaleY(1); } to { transform: scaleY(.5); } }
+@keyframes garden-glow { 0%,100% { opacity: .28; transform: scale(.8); transform-origin: 80px 108px; } 50% { opacity: .95; transform: scale(1.1); transform-origin: 80px 108px; } }
+@keyframes garden-glow-core { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
+@keyframes garden-tail-sway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(3deg); } }
+@keyframes garden-rabbit-curious { 0%,60%,100% { transform: rotate(0); } 72%,85% { transform: rotate(-4deg); } }
+@keyframes garden-duck-wing { 0%,70%,100% { transform: rotate(0); } 80%,90% { transform: rotate(-8deg); } 85% { transform: rotate(-2deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .garden-art *, .is-walking .garden-art *, .is-happy .garden-art *, .is-flying .garden-art * { animation: none !important; }
+}
+.motion-paused .garden-art * { animation-play-state: paused !important; }

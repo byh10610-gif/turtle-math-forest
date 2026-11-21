@@ -1,5 +1,9 @@
+import './garden/assets/characters.js';
+import './garden/garden-geometry.js';
+import './garden/garden-engine.js';
+import {prepareGardenV2,withGardenLayout} from './garden/integration/legacy-adapter.mjs';
 import {bindInk} from './ink.mjs';
-import {groups,stages,labels,modes,variantsFor,batch,assessment,assess,record,reviewTargets,nextSuggestion,load,save} from './math.mjs';
+import {groups,stages,labels,modes,variantsFor,batch,assessment,assess,record,reviewTargets,nextSuggestion,load,save,saveGardenLayout} from './math.mjs';
 import {ForestAudio,pulse} from './audio.mjs';
 import {profileNames} from './profile-names.mjs';
 
@@ -11,7 +15,7 @@ const avatars = {older:'🐰',young:'🐥'};
 const decorations = ['🌼','🐞','🌷','🦋','🍄','🐿️','🪻','🦆','🌻','🐇','🍀','🪷'];
 const state = load(localStorage);
 const audio = new ForestAudio();
-let child = null, screen = 'profiles', group = 0, slot = null, installPrompt = null;
+let child = null, screen = 'profiles', group = 0, installPrompt = null;
 let offlineReady = false;
 let warning = '';
 let arrangement = {level:7,topic:'mixed',mode:'choice',format:'basic'};
@@ -182,18 +186,40 @@ function resultView() {
       (next?'<div class="compact center">'+next+'</div>':'')+
       '<div class="compact center">'+act('garden','정원 꾸미기','button primary')+act('home','내 숲으로','button')+'</div>')+'</section></main>';
 }
+let gardenController;
 function gardenView() {
-  const p=profile();
-  const owned=decorations.slice(0,Math.min(p.rewards,decorations.length));
-  const available=owned.map((emoji,i)=>{
-    const cap=Math.floor((p.rewards-1-i)/decorations.length)+1;
-    const placed=p.garden.filter((item,j)=>item===i&&j!==slot).length;
-    return act('plant:'+i,icon(emoji)+'<small>'+Math.max(0,cap-placed)+'</small>','garden-item','aria-label="꾸미기 '+(i+1)+'번, 남은 수 '+Math.max(0,cap-placed)+'" '+(slot===null||placed>=cap?'disabled':''));
-  }).join('');
-  return '<main class="page"><div class="trail">'+act('home',names[child]+'의 숲','quiet')+'</div><div class="page-heading"><div><h1>'+names[child]+'의 정원</h1>'+
-    muted(p.rewards?'자리를 누르고 꽃이나 친구를 골라요.':'문제를 한 묶음 풀면 정원에 친구가 찾아와요.')+'</div><span class="range">보상 '+p.rewards+'개</span></div>'+
-    '<section class="garden habitat"><div class="garden-plots">'+Array.from({length:12},(_,i)=>act('slot:'+i,p.garden[i]!=null?icon(decorations[p.garden[i]]):'<span aria-hidden="true">＋</span>','plot'+(slot===i?' selected':''),'aria-label="정원 자리 '+(i+1)+'" aria-pressed="'+(slot===i)+'"')).join('')+'</div><button class="resident" aria-label="거북이에게 인사하기"><span class="critter">🐢</span><span class="bubble" aria-live="polite"></span></button></section>'+
-    '<div class="garden-tray">'+available+(slot!==null&&p.garden[slot]!=null?act('unplant','거두기','button'):'')+'</div></main>';
+  return '<main id="garden-host" aria-label="친구들과 노는 정원" tabindex="-1"></main>';
+}
+function mountGarden() {
+  const profileId=child, p=profile(), host=app.querySelector('#garden-host');
+  try {
+    const {items,warnings}=prepareGardenV2(p);
+    if(warnings.length) console.warn('Garden migration',warnings);
+    gardenController=window.GardenApp.mountGarden(host,{
+      profileId, items,
+      backgroundUrl:new URL('./garden/assets/garden-background.webp',import.meta.url).href,
+      effects:Boolean(p.effects), voiceEnabled:Boolean(p.sound),
+      onChange(layout) {
+        if (child!==profileId||screen!=='garden'||!host.isConnected) return;
+        const next=withGardenLayout(p,layout).gardenV2;
+        const status=host.querySelector('.garden-storage-status');
+        try {
+          saveGardenLayout(localStorage,profileId,next);
+          p.gardenV2=next;
+          status.hidden=true;
+        } catch(error) {
+          status.textContent='정원 배치를 저장하지 못했어요. 기기의 저장 공간을 확인해 주세요.';
+          status.hidden=false;
+          throw error;
+        }
+      },
+      onExit() {go('home');},
+    });
+    host.insertAdjacentHTML('beforeend','<p class="garden-storage-status warning" role="alert" hidden></p>');
+  } catch(error) {
+    console.error('Garden could not open',error);
+    host.innerHTML='<div class="page"><h1>정원을 열 수 없어요</h1><p>저장된 정원 데이터를 확인해 주세요.</p>'+act('home','내 숲으로')+'</div>';
+  }
 }
 function historyView() {
   const p=profile();
@@ -272,32 +298,11 @@ app.addEventListener('change',event=>{
 });
 
 
-let walkTimer, speechTimer;
-function visitGarden(turtle) {
-  const bubble=turtle.querySelector('.bubble');
-  const phrases=['같이 산책할래?', '연못 바람이 시원해!', '반가워!', '우리 정원이 참 좋아.'];
-  let step=0;
-  function walk(speak) {
-    const path=[[24,75],[65,67],[77,82],[39,70],[19,58]];
-    const [x,y]=path[step%path.length];
-    turtle.style.left=x+'%';
-    turtle.style.top=y+'%';
-    if(speak) {
-      bubble.textContent=phrases[step%phrases.length];
-      clearTimeout(speechTimer);
-      speechTimer=setTimeout(()=>{bubble.textContent=''},3200);
-    }
-    step++;
-  }
-  turtle.onclick=()=>walk(true);
-  walk(true);
-  if(!matchMedia('(prefers-reduced-motion: reduce)').matches)
-    walkTimer=setInterval(()=>walk(step%2===0),5200);
-}
 function render(focusAction) {
-  clearInterval(walkTimer);clearTimeout(speechTimer);
-  app.innerHTML=header()+views[screen]()+ (warning?'<div role="alert" class="warning">'+warning+'</div>':'');
-  if(screen==='garden')visitGarden(app.querySelector('.resident'));
+  gardenController?.destroy();
+  gardenController=null;
+  app.innerHTML=(screen==='garden'?'':header())+views[screen]()+ (warning?'<div role="alert" class="warning">'+warning+'</div>':'');
+  if(screen==='garden')mountGarden();
   if(child==='older'&&screen==='practice')bindInk(app,rowsFor(profile().active)[profile().active.index],persist);
   if (focusAction) {
     const target=[...app.querySelectorAll('button[data-do]')].find(node=>node.dataset.do===focusAction&&!node.disabled);
@@ -462,10 +467,7 @@ app.addEventListener('click',event=>{
     case 'next':advance();break;
     case 'key':handleKey(value);break;
     case 'history':go('history');break;
-    case 'garden':slot=null;go('garden');break;
-    case 'slot':slot=Number(value);render(button.dataset.do);break;
-    case 'plant':p.garden[slot]=Number(value);persist();render('slot:'+slot);break;
-    case 'unplant':p.garden[slot]=null;persist();render('slot:'+slot);break;
+    case 'garden':go('garden');break;
   }
 });
 function handleKey(value) {

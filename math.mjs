@@ -231,6 +231,12 @@ export function load(storage) {
   }));
 }
 export function save(storage,state) {storage.setItem(key,JSON.stringify(state));}
+export function saveGardenLayout(storage,id,layout) {
+  const raw=storage.getItem(key);
+  const saved=raw===null?{}:JSON.parse(raw);
+  saved[id]={...saved[id],gardenV2:layout};
+  storage.setItem(key,JSON.stringify(saved));
+}
 export function record(question,answers,hint,skip=false,date=new Date()) {
   const localDay=[date.getFullYear(),date.getMonth()+1,date.getDate()].join('-');
   const wrong=answers.filter(answer=>answer!==question.answer);
