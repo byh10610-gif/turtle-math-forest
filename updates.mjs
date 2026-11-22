@@ -1,4 +1,4 @@
-export const RELEASE = 16;
+export const RELEASE = 17;
 
 export async function watchForUpdates(onUpdate, onReady) {
   if (!('serviceWorker' in navigator)) return;

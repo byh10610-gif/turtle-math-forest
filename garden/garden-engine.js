@@ -1,3 +1,4 @@
+import {oceanArtwork,restsOnSeafloor} from './assets/ocean-friends.mjs';
 /*
  * Turtle Garden 2 — dependency-free interactive component.
  * Load assets/characters.js + garden-geometry.js first.
@@ -26,12 +27,12 @@
   const copy=items=>items.map(i=>({...i}));
   const moreArt={};
   function artwork(kind,id){
-    return window.GardenArt[kind]?.(id)||moreArt[kind]||'';
+    return window.GardenArt[kind]?.(id)||oceanArtwork(kind,id)||moreArt[kind]||'';
   }
   function addFriends(friends) {
     for(const [kind,[name,emoji]] of Object.entries(friends)){
       LABELS[kind]=name;
-      moreArt[kind]='<span class="tg-emoji" aria-hidden="true">'+emoji+'</span>';
+      if(emoji)moreArt[kind]='<span class="tg-emoji" aria-hidden="true">'+emoji+'</span>';
     }
   }
   function oceanGeometry(base) {
@@ -66,7 +67,7 @@
     const stopTimer=id=>{if(id){clearTimeout(id);timers.delete(id);}};
     const random=(a,b)=>a+Math.random()*(b-a);
     const flying=k=>['ladybug','butterfly','firefly','dragonfly','bee','bird','owl','beetle','grasshopper'].includes(k);
-    const swimming=k=>(ocean&&!['shell','coral'].includes(k))||['fish','duck'].includes(k);
+    const swimming=k=>(ocean&&!restsOnSeafloor(k)&&!['shell','coral'].includes(k))||['fish','duck'].includes(k);
     const walking=k=>['rabbit','squirrel','snail','hedgehog','fox','frog','raccoon','chipmunk','deer','mouse'].includes(k);
     const watery=k=>swimming(k)||k==='lotus';
     const mobile=k=>flying(k)||swimming(k)||walking(k);
@@ -124,6 +125,7 @@
     function pointFromClient(x,y){return{x:(x-worldRect.left)/worldRect.width,y:(y-worldRect.top)/worldRect.height};}
     function insideWorld(p){return p.x>=.02&&p.x<=.98&&p.y>=.06&&p.y<=.94;}
     function placementFor(kind,p){
+      if(ocean&&restsOnSeafloor(kind))return{point:{x:G.clamp(p.x,.09,.91),y:G.clamp(p.y,.82,.92)},adjusted:false};
       if(ocean)return{point:G.fishPoint(p),adjusted:false};
       if(watery(kind))return{point:G.fishPoint(p),adjusted:!G.inPond(p)};
       if(flying(kind))return{point:{x:G.clamp(p.x,.09,.92),y:G.clamp(p.y,.30,.83)},adjusted:false};
@@ -409,7 +411,7 @@
         burst(actor,'sparkle',3);speak(k==='ladybug'?'무당벌레야, 나무에서 만나!':'살랑살랑, 같이 놀자!');
       }else if(watery(k)){waterRings(actor);meetWaterFriend(actor);speak(LABELS[k]+' 친구에게 갈게!');}
       else if(walking(k)){actor.el.classList.add('is-greeting');after(()=>actor.el.classList.remove('is-greeting'),850);goTurtle({x:actor.x-.08,y:actor.y+.04},()=>happy(LABELS[k]+'야, 만나서 반가워!'));}
-      else{actor.el.classList.add('is-popping');after(()=>actor.el.classList.remove('is-popping'),700);burst(actor,k==='clover'?'sparkle':'heart',4);speak(k==='mushroom'?'동글동글, 버섯 쉼터야!':'예쁜 꽃향기가 나네. 고마워!');}
+      else{actor.el.classList.add('is-popping');after(()=>actor.el.classList.remove('is-popping'),700);burst(actor,k==='clover'?'sparkle':'heart',4);speak(ocean?LABELS[k]+' 발견!':'꼭꼭 살펴봐요. '+LABELS[k]+' 친구가 여기 있네!');}
     }
     function waterAt(actor){
       const k=actor.item.kind;

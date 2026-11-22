@@ -1,3 +1,4 @@
+import {newOceanFriends} from './garden/assets/ocean-friends.mjs';
 import {LEGACY_CATALOG} from './garden/integration/legacy-adapter.mjs';
 
 export const PAGE_SIZE=5;
@@ -15,6 +16,7 @@ export const oceanFriends={
   crab:['꽃게','🦀'], dolphin:['돌고래','🐬'], whale:['아기 고래','🐳'],
   puffer:['복어','🐡'], tropical:['열대어','🐟'], squid:['오징어','🦑'],
   shrimp:['새우','🦐'], lobster:['바닷가재','🦞'], shell:['조개','🐚'], coral:['산호','🪸'],
+  ...Object.fromEntries(Object.entries(newOceanFriends).map(([kind,{name}])=>[kind,[name]])),
 };
 const order=[
   'fish','snail','dragonfly','firefly','hedgehog','frog','bee','fox','owl',
@@ -29,7 +31,11 @@ export function awardFriend(profile,items) {
   const owned=new Set(Array.from({length:Math.min(profile.rewards,LEGACY_CATALOG.length)},(_,i)=>LEGACY_CATALOG[i]));
   for (const {kind} of profile.extraRewards??[]) owned.add(kind);
   const open=oceanOpen(profile);
-  const kind=order.find(candidate=>!owned.has(candidate)&&(open||!oceanKind(candidate)));
+  const available=order.filter(candidate=>!owned.has(candidate)&&(open||!oceanKind(candidate)));
+  const last=profile.extraRewards?.at(-1)?.kind;
+  const kind=open&&last
+    ? available.find(candidate=>oceanKind(candidate)!==oceanKind(last))??available[0]
+    : available[0];
   if (!kind) return null;
   profile.extraRewards=[...(profile.extraRewards??[]),{id:'friend-'+kind,kind}];
   return kind;
