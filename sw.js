@@ -1,11 +1,11 @@
-const release = 17;
+const release = 18;
 const version = 'turtle-forest-v'+release;
 const assets = ['./','./index.html','./style.css','./app.mjs','./math.mjs','./audio.mjs','./profile-names.mjs','./manifest.webmanifest','./icon-192.png','./icon-512.png','./forest.webp','./piano.ogg','./digits.bin','./ink.mjs','./credits.txt','./rewards.mjs','./updates.mjs',
   './garden/garden-engine.js',
   './garden/garden-geometry.js',
   './garden/garden.css',
   './garden/assets/characters.js',
-  './garden/assets/ocean-friends.mjs',
+  './garden/assets/ocean-friends.mjs','./garden/assets/ocean-world.svg','./garden/assets/space-world.svg','./garden/assets/underground-world.svg',
   './garden/assets/characters.css',
   './garden/integration/legacy-adapter.mjs',
   './garden/assets/garden-background.webp'

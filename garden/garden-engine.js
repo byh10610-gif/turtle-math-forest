@@ -78,7 +78,7 @@ import {oceanArtwork,restsOnSeafloor} from './assets/ocean-friends.mjs';
     host.innerHTML=`<section class="tg-app${ocean?' is-ocean':''}" aria-label="${ocean?'바닷속 지도':'친구들이 사는 정원'}">
       <div class="tg-stage">
         <div class="tg-world" aria-label="정원. 잔디를 누르면 거북이가 걸어와요." tabindex="0">
-          ${ocean?'<div class="ocean-scene" aria-hidden="true"><span>🪸</span><span>🪸</span><span>🌿</span><span>🫧</span><span>🫧</span><span>🐚</span></div>':'<img class="tg-background" alt="큰 나무와 꽃, 잔디 산책길과 푸른 연못이 있는 정원" draggable="false">'}
+          ${ocean?'<div class="ocean-scene" aria-hidden="true"></div><button class="reef-object pearl" data-action="pearl" aria-label="진주조개 열기">🐚</button><button class="reef-object vent" data-action="vent" aria-label="공기 방울 솟구치기">🫧</button><button class="reef-object beacon" data-action="beacon" aria-label="산호 등불 켜기">🪸</button>':'<img class="tg-background" alt="큰 나무와 꽃, 잔디 산책길과 푸른 연못이 있는 정원" draggable="false">'}
           <button class="tg-hotspot tg-tree-hotspot" data-action="tree" aria-label="나무를 톡, 나뭇잎 날리기"></button>
           <button class="tg-hotspot tg-pond-hotspot" data-action="pond" aria-label="연못을 톡, 거북이 헤엄치기"></button>
           <div class="tg-light"></div><div class="tg-placement-marker"></div>
@@ -116,6 +116,10 @@ import {oceanArtwork,restsOnSeafloor} from './assets/ocean-friends.mjs';
     const turtleEl=document.createElement('button');
     turtleEl.className='tg-entity tg-turtle';turtleEl.dataset.action='turtle';turtleEl.setAttribute('aria-label','초롱이에게 인사하기');
     turtleEl.innerHTML='<span class="tg-art">'+makeArt('turtle')+'</span><span class="tg-speech" aria-hidden="true"></span>';
+    if(ocean){
+      const head=turtleEl.querySelector('.turtle-head');
+      head?.insertAdjacentHTML('beforeend','<g class="dive-mask"><rect x="142" y="75" width="79" height="35" rx="15" fill="#81dbec" fill-opacity=".32" stroke="#315e76" stroke-width="5"/><path d="M218 95Q232 96 230 76V52h-8" fill="none" stroke="#e7ac59" stroke-width="7" stroke-linecap="round"/></g>');
+    }
     world.appendChild(turtleEl);
     const bubble=turtleEl.querySelector('.tg-speech');
     const turtle={x:.38,y:.77,face:1,path:[],speed:0,inWater:ocean,idle:4,arrive:null,happy:0,nextSwim:random(13,21)};
@@ -491,6 +495,19 @@ import {oceanArtwork,restsOnSeafloor} from './assets/ocean-friends.mjs';
       if(action==='close-help'){closeHelp();return;}
       if(action==='reset-demo'){options.onReset?.();closeHelp();return;}
       if(action==='map'){options.onMap?.();return;}
+      if(ocean&&['pearl','vent','beacon'].includes(action)&&!selectedId){
+        const button=e.target.closest('button');
+        if(action==='pearl'){
+          button.classList.toggle('open');button.textContent=button.classList.contains('open')?'🦪':'🐚';
+          happy('조개 속에 진주가 반짝여!');
+        }else if(action==='vent'){
+          for(let i=0;i<9;i++)after(()=>{const dot=document.createElement('i');dot.className='reef-bubble';dot.style.left=(46+random(-4,4))+'%';world.appendChild(dot);after(()=>dot.remove(),1900);},100*i);
+          ripple({x:.46,y:.65});speak('보글보글! 물방울을 따라가자.');
+        }else{
+          world.classList.toggle('reef-lit');button.setAttribute('aria-pressed',String(world.classList.contains('reef-lit')));chime('welcome');speak('산호 등불이 반짝여!');
+        }
+        return;
+      }
       if(action==='exit'){options.onExit?options.onExit():showHelp();return;}
       if(action==='help'){showHelp();return;}
       if(action==='undo'){undo();return;}

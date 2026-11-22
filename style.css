@@ -239,3 +239,14 @@ progress::-moz-progress-bar {background:#5b8558}
 @media (prefers-reduced-motion:reduce) {.page-turn,.gift-art{animation:none}}
 
 .app-update {position:fixed;z-index:1600;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));box-shadow:0 4px 18px #243b3255}
+
+.expedition{position:relative;height:100dvh;background-position:center;background-size:cover;color:#fff7df}
+.expedition.space{background-image:url('./garden/assets/space-world.svg')}
+.expedition.underground{background-image:url('./garden/assets/underground-world.svg')}
+.expedition header{display:flex;align-items:center;gap:22px;padding:18px}
+.expedition h1{font-size:clamp(22px,4vw,42px)}
+.discovery{position:absolute;display:grid;justify-items:center;background:#16213850;border:1px solid #fff6;border-radius:28px;padding:9px 16px;color:#fff7df;font-size:clamp(36px,7vw,86px)}
+.discovery small{font-size:16px;color:inherit}.discovery.found{box-shadow:0 0 30px #ffe8a4;background:#63553390}
+.discovery.item-0{left:15%;top:40%}.discovery.item-1{left:46%;top:53%}.discovery.item-2{right:10%;top:31%}
+.expedition footer{position:absolute;bottom:6%;left:50%;translate:-50%;border-radius:24px;background:#1d2036be;padding:10px 18px;text-align:center}
+.constellation{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}

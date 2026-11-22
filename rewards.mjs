@@ -42,7 +42,7 @@ export function awardFriend(profile,items) {
 }
 
 const ages=['','만 3–4세','만 4–5세','만 4–6세','만 5–6세','만 5–7세','만 6–7세','만 6–7세','만 6–8세','만 6–8세','만 7–8세','만 7–8세','만 7–8세','만 7–8세','만 7–8세','만 6–8세','만 7–8세','만 6–8세'];
-export const ageHint=level=>ages[level]||'';
+export const ageHint=level=>ages[level]||(level>=18?'만 8–10세':'');
 
 
 export const turtleMeals=Object.freeze({

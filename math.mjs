@@ -4,7 +4,8 @@ export const groups = [
   ['20까지', '🍃', '10을 만들고 넘어가기', [7,8,9]],
   ['두 자리 계산', '🐿️', '받아올림과 받아내림', [10,11,12]],
   ['곱셈', '🦋', '묶음으로 세고 구구 연습', [13,14]],
-  ['수 감각 놀이터', '🐞', '수 읽기·자릿값·크기 비교', [15,16,17]]
+  ['수 감각 놀이터', '🐞', '수 읽기·자릿값·크기 비교', [15,16,17]],
+  ['도전 연산','🚀','큰 수로 계산하기',[18,19,20,21]]
 ];
 const both = ['mixed','add','sub'];
 export const stages = {
@@ -19,7 +20,8 @@ export const stages = {
   12:['받아내림이 있는 뺄셈',['mixed','one','two']],
   13:['곱셈의 뜻 이해하기',['groups']],
   14:['곱셈구구 연습',['mixed','2','3','4','5','6','7','8','9']],
-  15:['수 읽기',['read']],16:['자릿값',['place']],17:['크기 비교',['compare']]
+  15:['수 읽기',['read']],16:['자릿값',['place']],17:['크기 비교',['compare']],
+  18:['세 자리 덧셈',['add']],19:['세 자리 뺄셈',['sub']],20:['두 자리 수 곱하기 한 자리 수',['multiply']],21:['나누어떨어지는 나눗셈',['divide']]
 };
 export const labels = {mixed:'골고루',add:'덧셈',sub:'뺄셈',count:'수량 찾기',match:'숫자와 개수',compare:'크기 비교',zero:'0 알아보기',merge:'모으기',split:'가르기',ten:'10 만들기',bundle:'10 묶음',one:'한 자리 수와',two:'두 자리 수끼리',groups:'같은 수의 묶음',read:'수 읽기',place:'자릿값',basic:'기본 계산만',understand:'이해 문제도 함께',calc:'기본',blank:'빈칸',relation:'덧셈과 뺄셈 관계',triple:'세 수 계산',story:'상황과 식'};
 export const modes = {picture:'그림 선택',choice:'5지선다',pad:'숫자패드'};
@@ -44,7 +46,7 @@ export function options(answer,max=Infinity) {
   }
   return shuffle([answer,...shuffle(nearby).slice(0,4)]);
 }
-const ceilings=[0,5,9,5,5,10,10,20,18,9,99,198,99,25,81,9999,9,9999];
+const ceilings=[0,5,9,5,5,10,10,20,18,9,99,198,99,25,81,9999,9,9999,1998,899,891,99];
 const korean = n => {
   if (!n) return '영';
   return String(n).split('').map((digit,i,all)=>{
@@ -103,6 +105,13 @@ export function arithmetic(level,a,b,op,variant='calc',topic=op==='+'?'add':'sub
 
 export function generate(level,selection='mixed',format='basic',forcedVariant) {
   const roll=randomInt;
+  if(level===18)return arithmetic(level,roll(100,999),roll(100,999),'+');
+  if(level===19){const a=roll(101,999);return arithmetic(level,a,roll(100,a-1),'−');}
+  if(level===20)return arithmetic(level,roll(10,99),roll(2,9),'×','calc','multiply');
+  if(level===21){
+    const answer=roll(2,25),b=roll(2,9),a=answer*b;
+    return make(level,'divide',answer,{a,b,op:'÷',expression:a+' ÷ '+b+' = □',hint:b+'에 어떤 수를 곱하면 '+a+'이 될까요?'});
+  }
   const selectable=stages[level][1].filter(k=>k!=='mixed' && !(level===7 && ['blank','relation','triple','story'].includes(format) && k==='bundle'));
   const topic=selection==='mixed'?pick(selectable):selection;
   const add=topic==='add';

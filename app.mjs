@@ -15,7 +15,7 @@ const announce = document.querySelector('#announce');
 const avatars = {older:'🐰',young:'🐥'};
 const state = load(localStorage);
 const audio = new ForestAudio();
-let child = null, screen = 'profiles', group = 0, installPrompt = null;
+let child = 'older', screen = 'home', group = 0, installPrompt = null;
 let offlineReady = false;
 let turningPage = false;
 let warning = '';
@@ -41,7 +41,7 @@ const act = (action,text,classes='button',attrs='') => '<button type="button" cl
 const muted = text=>'<p class="muted">'+text+'</p>';
 const icon = (emoji,classes='')=>'<span class="emoji '+classes+'" aria-hidden="true">'+emoji+'</span>';
 const stageName = id=>stages[id][0];
-const levelName = id=>id<=14?id+'단계':'보조 과정';
+const levelName = id=>id<=14?id+'단계':id>=18?'도전 '+(id-17):'보조 과정';
 const topicName = id=>labels[id] ?? id+'단';
 const chip = (name,value,text,active)=>act(name+':'+value,text,'chip'+(active?' selected':''),'aria-pressed="'+active+'"');
 const mascot = '<span class="mascot" aria-hidden="true"></span>';
@@ -56,7 +56,7 @@ function recommendations(history,level,topic) {
 }
 
 function header() {
-  return '<header class="bar">'+act('profiles',mascot+'<span>거북이 <b>수학숲</b></span>','brand','aria-label="거북이 수학숲, 프로필 선택"')+
+  return '<header class="bar">'+act('home',mascot+'<span>거북이 <b>수학숲</b></span>','brand','aria-label="하은이의 숲 홈"')+
     '<div class="bar-actions">'+(installPrompt?act('install',label('⇩','홈 화면에 추가'),'status-button'):'')+
     (screen==='practice'?act('music-toggle',profile().music?'♫':'♩','status-button music-toggle','aria-label="배경음악 '+(profile().music?'끄기':'켜기')+'" title="배경음악 '+(profile().music?'끄기':'켜기')+'" aria-pressed="'+profile().music+'"'):'')+
     (child?act('home',icon(avatars[child])+names[child]+'의 숲','profile-badge'):'<span class="ready"><i></i>'+(offlineReady?'오프라인 이용 가능':'기기에 학습 저장')+'</span>')+'</div></header>';
@@ -171,9 +171,18 @@ function practiceView() {
     (locked?act('next',s.index===s.questions.length-1?'결과 보기':'다음 문제','button primary next'):'')+'</section></div>'+
     (!locked?'<div class="modes" aria-label="답 입력 바꾸기">'+Object.entries(modes).map(([id,title])=>chip('during',id,title,mode===id)).join('')+'</div>':'')+'</main>';
 }
+const expeditions={
+  space:{title:'우주 관측소',goal:400,objects:['🌑','🪐','☄️'],names:['달','고리 행성','혜성'],complete:'별자리가 이어졌어요!'},
+  underground:{title:'땅속 탐험집',goal:600,objects:['🦴','💎','🐚'],names:['공룡 뼈','수정','조개 화석'],complete:'땅속 전시실이 완성됐어요!'}
+};
+function expeditionView(){
+  const w=expeditions[screen],found=profile().discoveries?.[screen]??[];
+  return '<main class="expedition '+screen+'"><header>'+act('home','← 하은이의 숲','button')+'<h1>'+w.title+'</h1></header>'+(screen==='space'&&found.length===3?'<svg class="constellation" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M20 49L51 62L85 39" fill="none" stroke="#fff2b8" stroke-width=".4" stroke-dasharray="1 1"/></svg>':'')+w.objects.map((obj,i)=>act('discover:'+i,obj+'<small>'+w.names[i]+'</small>','discovery item-'+i+(found.includes(i)?' found':''))).join('')+'<footer role="status">'+(found.length===3?w.complete:'탐험할 곳을 톡 눌러요 · '+found.length+' / 3')+'</footer></main>';
+}
 function mapLinks(p) {
   const done=solvedCount(p);
   return (p.result?.giftPending?act('gift','새 선물 보기','button'):'')
+    +Object.entries(expeditions).map(([id,w])=>done>=w.goal?act(id,w.title,'button'):done>=OCEAN_GOAL?'<small class="ocean-progress">'+w.title+' '+done+' / '+w.goal+'</small>':'').join('')
     +(done>=OCEAN_GOAL?act('ocean','바닷속 지도','button'):'<small class="ocean-progress">바닷속까지 '+done+' / '+OCEAN_GOAL+'문제</small>');
 }
 function giftView() {
@@ -260,7 +269,7 @@ function historyView() {
     (!last.length?muted('문제를 풀면 여기에 기록이 쌓여요.'):'<div class="panel history"><p>최근 '+last.length+'문제 · 전체 '+p.history.length+'문제</p>'+
     last.map(x=>'<div class="history-row"><span><strong>'+stageName(x.level)+'</strong><small>'+(x.expression||x.instruction)+' · 정답 '+x.answer+'</small></span><span>'+status[x.status]+(x.hint&&x.status!=='hint'?' · 도움':'')+(x.wrong.length?' · 오답 '+x.wrong.join(', '):'')+'</span><time>'+x.day+'</time></div>').join('')+'</div>')+'</main>';
 }
-const views={profiles:profilesView,home:homeView,levels:levelsView,group:groupView,setup:setupView,settings:()=>setupView(true),practice:practiceView,result:resultView,gift:giftView,garden:gardenView,ocean:gardenView,history:historyView};
+const views={space:expeditionView,underground:expeditionView,home:homeView,levels:levelsView,group:groupView,setup:setupView,settings:()=>setupView(true),practice:practiceView,result:resultView,gift:giftView,garden:gardenView,ocean:gardenView,history:historyView};
 function notebookHome() {
   const p=profile();
   const choices=groups.map(([title,,,ids])=>'<optgroup label="'+title+'">'+ids.map(id=>'<option value="'+id+'" '+(id===p.level?'selected':'')+'>'+levelName(id)+' · '+stageName(id)+' ('+ageHint(id)+' 참고)</option>').join('')+'</optgroup>').join('');
@@ -339,7 +348,7 @@ app.addEventListener('change',event=>{
 function render(focusAction) {
   gardenController?.destroy();
   gardenController=null;
-  app.innerHTML=(['garden','ocean','gift'].includes(screen)?'':header())+views[screen]()+ (warning?'<div role="alert" class="warning">'+warning+'</div>':'');
+  app.innerHTML=(['garden','ocean','gift','space','underground'].includes(screen)?'':header())+views[screen]()+ (warning?'<div role="alert" class="warning">'+warning+'</div>':'');
   turningPage=false;
   if(screen==='garden'||screen==='ocean')mountGarden();
   if(child==='older'&&screen==='practice')bindInk(app,rowsFor(profile().active)[profile().active.index],persist);
@@ -484,8 +493,8 @@ app.addEventListener('click',event=>{
   const [action,value]=button.dataset.do.split(':');
   if (action!=='answer' && !(action==='key' && value==='submit')) feedback('tap',action==='child'?state[value]:profile());
   if (action==='install') {installPrompt?.prompt();return;}
-  if (action==='profiles') {child=null;go('profiles');return;}
-  if (action==='child') {child=value;go('home');return;}
+  if (action==='profiles') {go('home');return;}
+  if (action==='child') {go('home');return;}
   if (!child) return;
   const p=profile();
   if(action.startsWith('ink-')){sheetAction(action,value);return;}
@@ -531,6 +540,17 @@ app.addEventListener('click',event=>{
     case 'history':go('history');break;
     case 'gift':if(p.result?.giftPending)go('gift');break;
     case 'dismiss-gift':p.result.giftPending=false;persist();go('result');break;
+    case 'space':case 'underground':
+      if(solvedCount(p)>=expeditions[action].goal)go(action);
+      break;
+    case 'discover':{
+      if(!expeditions[screen])break;
+      p.discoveries??={};
+      const found=p.discoveries[screen]??=[];
+      const index=Number(value);
+      if(!found.includes(index)){found.push(index);persist();}
+      render();break;
+    }
     case 'ocean':
     case 'garden':
       if(action==='ocean'&&!oceanOpen(p))break;
