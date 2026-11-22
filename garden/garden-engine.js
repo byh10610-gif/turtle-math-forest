@@ -24,9 +24,29 @@
   const icon=name=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name]||ICONS.sparkle)+'</svg>';
   let mountSerial=0;
   const copy=items=>items.map(i=>({...i}));
+  const moreArt={};
+  function artwork(kind,id){
+    return moreArt[kind]||window.GardenArt[kind]?.(id)||'';
+  }
+  function addFriends(friends) {
+    for(const [kind,[name,emoji]] of Object.entries(friends)){
+      LABELS[kind]=name;
+      moreArt[kind]='<span class="tg-emoji" aria-hidden="true">'+emoji+'</span>';
+    }
+  }
+  function oceanGeometry(base) {
+    const FISH={x:.5,y:.54,rx:.38,ry:.31};
+    const point=p=>{
+      const distance=Math.max(1,Math.sqrt(base.ellipse(p,FISH)));
+      return {x:FISH.x+(p.x-FISH.x)/distance,y:FISH.y+(p.y-FISH.y)/distance};
+    };
+    return {...base,FISH,fishPoint:point,inPond:p=>base.ellipse(p,FISH)<=1,
+      landPoint:point,walkPath:(_start,target)=>[point(target)]};
+  }
   function mountGarden(host,options={}){
     if(!host||!window.GardenArt||!window.GardenGeometry)throw new Error('Garden requires a host, characters.js and garden-geometry.js');
-    const art=window.GardenArt,G=window.GardenGeometry,mountId='tg'+(++mountSerial);
+    const ocean=Boolean(options.ocean),base=window.GardenGeometry;
+    const G=ocean?oceanGeometry(base):base,mountId='tg'+(++mountSerial);
     const supported=new Set(Object.keys(LABELS));
     let items=copy(options.items||[]);
     const ids=new Set();
@@ -45,30 +65,31 @@
     const after=(fn,delay)=>{const id=setTimeout(()=>{timers.delete(id);if(!destroyed)fn();},delay);timers.add(id);return id;};
     const stopTimer=id=>{if(id){clearTimeout(id);timers.delete(id);}};
     const random=(a,b)=>a+Math.random()*(b-a);
-    const flying=k=>['ladybug','butterfly','firefly','dragonfly'].includes(k);
-    const swimming=k=>['fish','duck'].includes(k);
-    const walking=k=>['rabbit','squirrel','snail'].includes(k);
+    const flying=k=>['ladybug','butterfly','firefly','dragonfly','bee','bird','owl','beetle','grasshopper'].includes(k);
+    const swimming=k=>(ocean&&!['shell','coral'].includes(k))||['fish','duck'].includes(k);
+    const walking=k=>['rabbit','squirrel','snail','hedgehog','fox','frog','raccoon','chipmunk','deer','mouse'].includes(k);
     const watery=k=>swimming(k)||k==='lotus';
     const mobile=k=>flying(k)||swimming(k)||walking(k);
-    const makeArt=kind=>art[kind](mountId+'-art-'+(++serial));
+    const makeArt=kind=>artwork(kind,mountId+'-art-'+(++serial));
     const background=options.backgroundUrl||'./assets/garden-background.png';
-    host.innerHTML=`<section class="tg-app" aria-label="친구들이 사는 정원">
+    host.innerHTML=`<section class="tg-app${ocean?' is-ocean':''}" aria-label="${ocean?'바닷속 지도':'친구들이 사는 정원'}">
       <div class="tg-stage">
         <div class="tg-world" aria-label="정원. 잔디를 누르면 거북이가 걸어와요." tabindex="0">
-          <img class="tg-background" alt="큰 나무와 꽃, 잔디 산책길과 푸른 연못이 있는 정원" draggable="false">
+          ${ocean?'<div class="ocean-scene" aria-hidden="true"><span>🪸</span><span>🪸</span><span>🌿</span><span>🫧</span><span>🫧</span><span>🐚</span></div>':'<img class="tg-background" alt="큰 나무와 꽃, 잔디 산책길과 푸른 연못이 있는 정원" draggable="false">'}
           <button class="tg-hotspot tg-tree-hotspot" data-action="tree" aria-label="나무를 톡, 나뭇잎 날리기"></button>
           <button class="tg-hotspot tg-pond-hotspot" data-action="pond" aria-label="연못을 톡, 물결 만들기"></button>
           <div class="tg-light"></div><div class="tg-placement-marker"></div>
         </div>
         <div class="tg-topbar"><div class="tg-topbar-group">
           <button class="tg-round" data-action="exit" aria-label="${options.demo?'미리보기 안내':'돌아가기'}">${icon(options.demo?'help':'back')}</button>
+          ${options.onMap?`<button class="tg-round tg-map-button" data-action="map">${ocean?'🌿 정원':'🌊 바닷속'}</button>`:''}
           ${options.demo?'<span class="tg-preview-label">새 정원 미리보기</span>':''}
         </div><div class="tg-topbar-group">
           <button class="tg-round" data-action="sound" aria-label="소리 켜기" aria-pressed="false">${icon('mute')}</button>
           <button class="tg-round" data-action="night" aria-label="반딧불이 저녁으로 바꾸기" aria-pressed="false">${icon('sun')}</button>
           ${options.demo?'':`<button class="tg-round" data-action="help" aria-label="정원에서 노는 방법">${icon('help')}</button>`}
         </div></div>
-        <div class="tg-hint">거북이를 톡! 잔디를 누르면 따라와요.</div>
+        <div class="tg-hint">${ocean?'물을 톡! 친구들이 물결을 따라와요.':'거북이를 톡! 잔디를 누르면 따라와요.'}</div>
       </div>
       <div class="tg-tray" aria-label="아직 정원에 놓지 않은 선물">
         <div class="tg-tray-copy"><h2 class="tg-tray-title">새로 온 친구들 <span class="tg-count">0</span></h2><p>꾹 끌어 정원에 놓아요.<br>하나 누르고, 정원을 톡 해도 돼요.</p></div>
@@ -83,11 +104,11 @@
     </section>`;
     const app=host.firstElementChild,stage=app.querySelector('.tg-stage'),world=app.querySelector('.tg-world'),tray=app.querySelector('.tg-tray'),trayList=app.querySelector('.tg-tray-list');
     const hint=app.querySelector('.tg-hint'),toastEl=app.querySelector('.tg-toast'),marker=app.querySelector('.tg-placement-marker'),live=app.querySelector('[data-live]');
-    stage.style.setProperty('--garden-bg','url('+JSON.stringify(background)+')');
-    const bg=world.querySelector('.tg-background');bg.src=background;
+    const bg=world.querySelector('.tg-background');
+    if(bg){stage.style.setProperty('--garden-bg','url('+JSON.stringify(background)+')');bg.src=background;}
     let imageRatio=1586/992;
-    bg.addEventListener('load',()=>{imageRatio=bg.naturalWidth/bg.naturalHeight||imageRatio;resize();},{signal:abort.signal});
-    bg.addEventListener('error',()=>toast('배경을 불러오지 못했어요. assets 폴더가 함께 있는지 확인해 주세요.',10000),{signal:abort.signal});
+    bg?.addEventListener('load',()=>{imageRatio=bg.naturalWidth/bg.naturalHeight||imageRatio;resize();},{signal:abort.signal});
+    bg?.addEventListener('error',()=>toast('배경을 불러오지 못했어요. assets 폴더가 함께 있는지 확인해 주세요.',10000),{signal:abort.signal});
     const turtleEl=document.createElement('button');
     turtleEl.className='tg-entity tg-turtle';turtleEl.dataset.action='turtle';turtleEl.setAttribute('aria-label','초롱이에게 인사하기');
     turtleEl.innerHTML='<span class="tg-art">'+makeArt('turtle')+'</span><span class="tg-speech" aria-hidden="true"></span>';
@@ -100,6 +121,7 @@
     function pointFromClient(x,y){return{x:(x-worldRect.left)/worldRect.width,y:(y-worldRect.top)/worldRect.height};}
     function insideWorld(p){return p.x>=.02&&p.x<=.98&&p.y>=.06&&p.y<=.94;}
     function placementFor(kind,p){
+      if(ocean)return{point:G.fishPoint(p),adjusted:false};
       if(watery(kind))return{point:G.fishPoint(p),adjusted:!G.inPond(p)};
       if(flying(kind))return{point:{x:G.clamp(p.x,.09,.92),y:G.clamp(p.y,.30,.83)},adjusted:false};
       return{point:G.landPoint(p),adjusted:G.inPond(p)||p.y<.49};
@@ -245,7 +267,7 @@
         const target=G.FOLIAGE[Math.floor(Math.random()*G.FOLIAGE.length)];
         setRoute(actor,{x:target.x+random(-.025,.025),y:target.y+random(-.02,.02)},random(2.5,4));
         burst(actor,'sparkle',3);speak(k==='ladybug'?'무당벌레야, 나무에서 만나!':'살랑살랑, 같이 놀자!');
-      }else if(swimming(k)){ripple(actor);speak(k==='fish'?'반짝반짝! 물고기가 헤엄치네.':'오리야, 물놀이 재밌니?');}
+      }else if(swimming(k)){ripple(actor);speak(k==='duck'?'오리야, 물놀이 재밌니?':LABELS[k]+' 친구가 헤엄치네!');}
       else if(walking(k)){actor.el.classList.add('is-greeting');after(()=>actor.el.classList.remove('is-greeting'),850);goTurtle({x:actor.x-.08,y:actor.y+.04},()=>happy(LABELS[k]+'야, 만나서 반가워!'));}
       else{actor.el.classList.add('is-popping');after(()=>actor.el.classList.remove('is-popping'),700);burst(actor,k==='clover'?'sparkle':'heart',4);speak(k==='mushroom'?'동글동글, 버섯 쉼터야!':'예쁜 꽃향기가 나네. 고마워!');}
     }
@@ -326,6 +348,7 @@
       const action=e.target.closest('[data-action]')?.dataset.action;
       if(action==='close-help'){closeHelp();return;}
       if(action==='reset-demo'){options.onReset?.();closeHelp();return;}
+      if(action==='map'){options.onMap?.();return;}
       if(action==='exit'){options.onExit?options.onExit():showHelp();return;}
       if(action==='help'){showHelp();return;}
       if(action==='undo'){undo();return;}
@@ -337,6 +360,7 @@
       if(selectedId){place(selectedId,p);return;}
       if(action==='turtle'){goTurtle(turtle);happy(['안녕! 만나서 반가워.','쓰담쓰담, 기분 좋아!','우리 같이 산책할까?'][Math.floor(Math.random()*3)]);return;}
       if(action==='tree'){treeTap();return;}
+      if(ocean){ripple(p);goTurtle(p);speak('보글보글! 같이 헤엄치자.');return;}
       if(action==='pond'||G.inPond(p)){ripple(p);speak([...actors.values()].some(a=>a.item.kind==='fish')?'물고기야, 여기로 와!':'퐁당! 물결이 동그랗게 퍼져.');return;}
       if(watering){burst(p,'sparkle',4);chime('water');speak('풀도 시원하대. 고마워!');return;}
       if(insideWorld(p)){burst(p,'sparkle',2);goTurtle(p,()=>speak('여기까지 왔어!'));speak('응, 그쪽으로 갈게!');}
@@ -420,5 +444,5 @@
       }
     };
   }
-  window.GardenApp=Object.freeze({mountGarden,labels:LABELS});
+  window.GardenApp=Object.freeze({mountGarden,labels:LABELS,artwork,addFriends});
 })();

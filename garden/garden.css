@@ -73,3 +73,19 @@
 @media(orientation:portrait){.tg-stage{min-height:0}.tg-tray{flex-wrap:wrap;padding:13px 18px 16px;gap:4px;min-height:202px}.tg-tray-copy{width:auto;flex:1}.tg-tray-copy p{display:none}.tg-tray-title{font-size:16px;margin:0}.tg-tray-actions{border:0;order:1;padding:0}.tg-tray-list{order:2;width:100%;flex:none;padding-top:10px}.tg-tool{min-height:42px;flex-direction:row;font-size:12px;padding:7px;gap:5px}.tg-tool svg{width:22px;height:22px}.tg-card{width:88px;min-width:88px;height:96px}.tg-card-art{height:64px;width:64px}.tg-topbar{top:12px;left:12px;right:12px}.tg-topbar-group{gap:7px}.tg-preview-label{font-size:10px}.tg-hint{white-space:normal;bottom:10px;font-size:12px;width:max-content;max-width:85%}.tg-toast{top:75px;max-width:86%;width:max-content;font-size:13px}}
 @media(max-height:560px) and (orientation:landscape){.tg-tray{min-height:100px;padding:5px 14px}.tg-card{height:80px;min-width:72px;width:72px}.tg-card-art{height:51px;width:54px}.tg-topbar{top:10px}.tg-round{width:42px;height:42px}.tg-hint{font-size:12px;bottom:7px;padding:6px 12px}.tg-tray-copy{width:125px}.tg-tray-title{font-size:14px}}
 @media(prefers-reduced-motion:reduce){.tg-app *, .tg-app *::before,.tg-app *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}.tg-firefly{display:none}}
+
+.tg-emoji {display:grid;place-items:center;font-size:clamp(24px,5.8vw,54px);line-height:1;width:100%;height:100%}
+.tg-card .tg-emoji {font-size:42px}
+.tg-map-button {width:auto;min-width:68px;padding-inline:12px;font-weight:750;white-space:nowrap}
+.is-ocean .tg-stage {background:#123e59}
+.is-ocean .tg-world {background:linear-gradient(172deg,#56cdd3,#1b839f 46%,#245870 81%,#c2a771 82%,#ad8259 100%)}
+.is-ocean .tg-tree-hotspot,.is-ocean .tg-pond-hotspot,.is-ocean [data-action="water"],.is-ocean [data-action="night"],.is-ocean .tg-firefly {display:none}
+.is-ocean .tg-tray {background:linear-gradient(180deg,#effcf9,#d4eceb)}
+.ocean-scene {position:absolute;inset:0;pointer-events:none;background:repeating-conic-gradient(from 138deg at 48% -30%,#ccffff00 0deg 10deg,#e0ffff1e 13deg,#d5ffff00 21deg)}
+.ocean-scene span {position:absolute;line-height:1;font-size:clamp(25px,8vw,108px);transform:translate(-50%,-50%);filter:drop-shadow(0 8px 10px #1231424a)}
+.ocean-scene span:nth-child(1){left:12%;top:81%}
+.ocean-scene span:nth-child(2){left:87%;top:84%;font-size:clamp(19px,5vw,70px)}
+.ocean-scene span:nth-child(3){left:75%;top:84%;opacity:.7}
+.ocean-scene span:nth-child(4){left:12%;top:47%;opacity:.45}
+.ocean-scene span:nth-child(5){left:86%;top:38%;opacity:.5}
+.ocean-scene span:nth-child(6){left:42%;top:91%;font-size:clamp(14px,3vw,48px)}

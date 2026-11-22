@@ -1,3 +1,4 @@
+import {PAGE_SIZE,REWARD_SIZE,OCEAN_GOAL,solvedCount,oceanOpen,oceanKind,awardFriend,ageHint,landFriends,oceanFriends} from './rewards.mjs';
 import './garden/assets/characters.js';
 import './garden/garden-geometry.js';
 import './garden/garden-engine.js';
@@ -7,14 +8,15 @@ import {groups,stages,labels,modes,variantsFor,batch,assessment,assess,record,re
 import {ForestAudio,pulse} from './audio.mjs';
 import {names} from './profile-names.mjs';
 
+window.GardenApp.addFriends({...landFriends,...oceanFriends});
 const app = document.querySelector('#app');
 const announce = document.querySelector('#announce');
 const avatars = {older:'🐰',young:'🐥'};
-const decorations = ['🌼','🐞','🌷','🦋','🍄','🐿️','🪻','🦆','🌻','🐇','🍀','🪷'];
 const state = load(localStorage);
 const audio = new ForestAudio();
 let child = null, screen = 'profiles', group = 0, installPrompt = null;
 let offlineReady = false;
+let turningPage = false;
 let warning = '';
 let arrangement = {level:7,topic:'mixed',mode:'choice',format:'basic'};
 
@@ -78,12 +80,12 @@ function homeView() {
     muted(p.active?levelName(p.active.level)+' '+stageName(p.active.level)+' · '+remaining(p)+'문제 남음':levelName(p.level)+' '+stageName(p.level))+
     '<div class="home-buttons">'+act('resume',label('▶',p.active?'이어 하기':p.history.length?'지난 단계 이어 하기':'연습 시작'),'button primary')+
     act('levels',label('🌿','단계 고르기'))+act('review',label('🍂','오늘의 복습'))+'</div></section>'+
-    '<aside class="home-side"><section class="picture-card"><div class="picture-note">'+mascot+'<div><strong>'+names[child]+'의 정원</strong><small>모은 보상 '+p.rewards+'개</small></div>'+act('garden','정원 보기','button mini')+'</div></section>'+
+    '<aside class="home-side"><section class="picture-card"><div class="picture-note">'+mascot+'<div><strong>'+names[child]+'의 정원</strong><small>모은 보상 '+(p.rewards+(p.extraRewards?.length??0))+'개</small></div>'+act('garden','정원 보기','button mini')+'</div></section>'+
     '<section class="panel advice"><h2>내 시작점 알아보기</h2>'+
     (advice?'<p>덧셈 <b>'+advice.add+'단계</b> · 뺄셈 <b>'+advice.sub+'단계</b></p><div class="compact">'+act('advice:add','덧셈 연습','chip')+act('advice:sub','뺄셈 연습','chip')+(advice.ten?act('pick:5','10 만들기','chip'):'')+'</div>':muted(child==='older'?'10 묶음과 10을 넘는 계산을 짧게 확인해요.':'작은 수량, 숫자와 개수, 하나 더·덜을 확인해요.'))+
     act('check',advice?'시작 확인 다시 하기':'시작 확인','quiet')+
     (next?'<p>요즘 혼자 잘 풀었어요.</p><div class="compact">'+next+'</div>':'')+'</section></aside></div>'+
-    '<div class="footer-actions">'+act('settings','학습·소리 설정','quiet')+act('history','학습 기록','quiet')+'</div></main>';
+    '<div class="footer-actions">'+act('settings','학습·소리 설정','quiet')+act('history','학습 기록','quiet')+mapLinks(p)+'</div></main>';
 }
 function levelsView() {
   return '<main class="page"><div class="trail">'+act('home',names[child]+'의 숲','quiet')+'</div><div class="page-heading"><div><h1>단계 고르기</h1>'+muted('연습하고 싶은 묶음을 골라요.')+'</div></div>'+
@@ -95,7 +97,7 @@ function groupView() {
   return '<main class="page"><div class="trail">'+act('levels','단계 고르기','quiet')+'</div><div class="page-heading"><h1>'+icon(emoji)+title+'</h1></div>'+
     '<div class="stage-list">'+items.map(id=>act('pick:'+id,
       '<span class="stage-index">'+(id<=14?id:icon('✦'))+'</span><strong>'+stageName(id)+'</strong>'+
-      (profile().level===id?'<span class="range">지난 단계</span>':'')+'<span class="chevron" aria-hidden="true">›</span>','stage-card')).join('')+'</div></main>';
+      '<small class="stage-age">참고 '+ageHint(id)+'</small>'+(profile().level===id?'<span class="range">지난 단계</span>':'')+'<span class="chevron" aria-hidden="true">›</span>','stage-card')).join('')+'</div></main>';
 }
 function setupView(settings=false) {
   const {level,topic,mode,format}=arrangement;
@@ -148,7 +150,7 @@ function practiceView() {
   const stateText=locked?'정답이에요!':a.wrong?'한 번 더 생각해 봐요.':'';
   const instruction=!q.cards && mode!=='picture' && (q.level===1||q.topic==='zero')?'열매가 몇 개일까요?':q.instruction;
   const headerTitle=s.kind==='check'?'시작 확인':s.kind==='review'?'오늘의 복습':stageName(s.level);
-  return '<main class="page practice"><div class="practice-nav">'+act('home','저장하고 나가기','quiet')+
+  return '<main class="page practice'+(turningPage?' page-turn':'')+'"><div class="practice-nav">'+act('home','저장하고 나가기','quiet')+
     '<div class="progress" aria-label="'+(s.index+1)+' / '+s.questions.length+' 문제"><span>'+(s.index+1)+' / '+s.questions.length+'</span><progress max="'+s.questions.length+'" value="'+(s.index+(locked?1:0))+'"></progress></div><span class="practice-title">'+headerTitle+'</span></div>'+
     '<div class="practice-grid"><div><section class="question panel"><div class="question-head"><p>'+instruction+'</p>'+
     (p.sound?act('speak','🔊','listen','aria-label="문제 읽어 주기"'):'')+'</div>'+
@@ -168,6 +170,22 @@ function practiceView() {
     (locked?act('next',s.index===s.questions.length-1?'결과 보기':'다음 문제','button primary next'):'')+'</section></div>'+
     (!locked?'<div class="modes" aria-label="답 입력 바꾸기">'+Object.entries(modes).map(([id,title])=>chip('during',id,title,mode===id)).join('')+'</div>':'')+'</main>';
 }
+function mapLinks(p) {
+  const done=solvedCount(p);
+  return (p.result?.giftPending?act('gift','새 선물 보기','button'):'')
+    +(done>=OCEAN_GOAL?act('ocean','바닷속 지도','button'):'<small class="ocean-progress">바닷속까지 '+done+' / '+OCEAN_GOAL+'문제</small>');
+}
+function giftView() {
+  const {gift,openedOcean}=profile().result;
+  const name=window.GardenApp.labels[gift];
+  return '<main class="gift-page"><div class="gift-sparkles" aria-hidden="true">✦　✧　✦</div>'
+    +'<div class="gift-art" aria-hidden="true">'+window.GardenApp.artwork(gift,'earned-gift')+'</div>'
+    +'<h1>'+name+' 선물을 받았어요!</h1>'
+    +(openedOcean?'<p>100문제 달성! 바닷속 지도가 열렸어요.</p>':'')
+    +'<div class="compact center">'+act(oceanKind(gift)?'ocean':'garden',oceanKind(gift)?'바닷속 가기':'정원에 놓으러 가기','button primary')
+    +(openedOcean&&!oceanKind(gift)?act('ocean','바닷속 가기','button'):'')
+    +act('dismiss-gift','풀이 결과 보기','button')+'</div></main>';
+}
 function resultView() {
   const p=profile(), r=p.result;
   if (!r) return homeView();
@@ -180,7 +198,8 @@ function resultView() {
       (advice.ten?muted('10 만들기도 함께 연습해요.'):'')+(advice.unconfirmed?muted('건너뛴 문제는 아직 확인하지 않았어요.'):'')+
       '<div class="compact center">'+act('advice:add','덧셈 시작','button primary')+act('advice:sub','뺄셈 시작','button')+'</div>':
       '<div class="result-stats">'+[['independent','처음에 혼자'],['hint','도움 받고'],['retry','다시 도전']].map(([id,title])=>'<div><strong>'+count(id)+'</strong><small>'+title+'</small></div>').join('')+'</div>'+
-      '<p>'+icon(decorations[(p.rewards-1)%decorations.length])+' 정원에 새 꾸미기 보상이 생겼어요.</p>'+
+      (r.gift?'<p>'+window.GardenApp.labels[r.gift]+' 선물을 받았어요.</p>':r.items.filter(i=>i.status!=='skipped').length>=REWARD_SIZE?'<p>모든 친구를 만났어요!</p>':'')+
+      (r.openedOcean?act('ocean','100문제 달성 · 바닷속 가기','button'):'')+
       (next?'<div class="compact center">'+next+'</div>':'')+
       '<div class="compact center">'+act('garden','정원 꾸미기','button primary')+act('home','내 숲으로','button')+'</div>')+'</section></main>';
 }
@@ -190,15 +209,16 @@ function gardenView() {
 }
 function mountGarden() {
   const profileId=child, p=profile(), host=app.querySelector('#garden-host');
+  const ocean=screen==='ocean';
   try {
     const {items,warnings}=prepareGardenV2(p);
     if(warnings.length) console.warn('Garden migration',warnings);
     gardenController=window.GardenApp.mountGarden(host,{
-      profileId, items,
+      profileId, ocean, items:items.filter(item=>oceanKind(item.kind)===ocean),
       backgroundUrl:new URL('./garden/assets/garden-background.webp',import.meta.url).href,
       effects:Boolean(p.effects), voiceEnabled:Boolean(p.sound),
       onChange(layout) {
-        if (child!==profileId||screen!=='garden'||!host.isConnected) return;
+        if (child!==profileId||screen!==(ocean?'ocean':'garden')||!host.isConnected) return;
         const next=withGardenLayout(p,layout).gardenV2;
         const status=host.querySelector('.garden-storage-status');
         try {
@@ -212,6 +232,7 @@ function mountGarden() {
         }
       },
       onExit() {go('home');},
+      onMap:ocean?()=>go('garden'):oceanOpen(p)?()=>go('ocean'):null,
     });
     host.insertAdjacentHTML('beforeend','<p class="garden-storage-status warning" role="alert" hidden></p>');
   } catch(error) {
@@ -227,11 +248,11 @@ function historyView() {
     (!last.length?muted('문제를 풀면 여기에 기록이 쌓여요.'):'<div class="panel history"><p>최근 '+last.length+'문제 · 전체 '+p.history.length+'문제</p>'+
     last.map(x=>'<div class="history-row"><span><strong>'+stageName(x.level)+'</strong><small>'+(x.expression||x.instruction)+' · 정답 '+x.answer+'</small></span><span>'+status[x.status]+(x.hint&&x.status!=='hint'?' · 도움':'')+(x.wrong.length?' · 오답 '+x.wrong.join(', '):'')+'</span><time>'+x.day+'</time></div>').join('')+'</div>')+'</main>';
 }
-const views={profiles:profilesView,home:homeView,levels:levelsView,group:groupView,setup:setupView,settings:()=>setupView(true),practice:practiceView,result:resultView,garden:gardenView,history:historyView};
+const views={profiles:profilesView,home:homeView,levels:levelsView,group:groupView,setup:setupView,settings:()=>setupView(true),practice:practiceView,result:resultView,gift:giftView,garden:gardenView,ocean:gardenView,history:historyView};
 function notebookHome() {
   const p=profile();
-  const choices=groups.map(([title,,,ids])=>'<optgroup label="'+title+'">'+ids.map(id=>'<option value="'+id+'" '+(id===p.level?'selected':'')+'>'+levelName(id)+' · '+stageName(id)+'</option>').join('')+'</optgroup>').join('');
-  return '<main class="desk"><section class="bookcover"><div><small>연산 연습장</small><h1>'+names.older+'의 수학 노트</h1><p>오늘 풀어 볼 한 장을 골라요.</p><label>학습 단계<select id="notebook-stage">'+choices+'</select></label>'+act('resume',p.active?'풀던 연습 이어 하기':'연습장 펼치기','button primary')+'</div><img src="./forest.webp" alt="연못가의 거북이"></section><nav class="booknav">'+act('check','시작 확인','quiet')+act('review','오늘의 복습','quiet')+act('garden','나의 정원','quiet')+act('history','학습 기록','quiet')+'<a class="music-credit" href="./credits.txt" target="_blank">음악 · 자료 출처</a></nav></main>';
+  const choices=groups.map(([title,,,ids])=>'<optgroup label="'+title+'">'+ids.map(id=>'<option value="'+id+'" '+(id===p.level?'selected':'')+'>'+levelName(id)+' · '+stageName(id)+' ('+ageHint(id)+' 참고)</option>').join('')+'</optgroup>').join('');
+  return '<main class="desk"><section class="bookcover"><div><small>연산 연습장</small><h1>'+names.older+'의 수학 노트</h1><p>다섯 문제씩 두 장을 풀면 새 친구를 만나요.</p><label>학습 단계<select id="notebook-stage">'+choices+'</select></label>'+act('resume',p.active?'풀던 연습 이어 하기':'연습장 펼치기','button primary')+'</div><img src="./forest.webp" alt="연못가의 거북이"></section><nav class="booknav">'+act('check','시작 확인','quiet')+act('review','오늘의 복습','quiet')+act('garden','나의 정원','quiet')+act('history','학습 기록','quiet')+mapLinks(p)+'<a class="music-credit" href="./credits.txt" target="_blank">음악 · 자료 출처</a></nav></main>';
 }
 function rowsFor(s) {
   if(!s.rows) s.rows=s.questions.map((q,i)=>{
@@ -252,9 +273,9 @@ function sheetPrompt(q) {
 }
 function sheetView(){
   const s=profile().active,rows=rowsFor(s),i=s.index,row=rows[i],q=s.questions[i],count=rows.filter(r=>r.correct).length;
-  const offset=Math.floor(i/5)*5;
+  const offset=Math.floor(i/PAGE_SIZE)*PAGE_SIZE;
   const stamp=s.message || (row.correct?'참 잘했어요!':row.wrong?'다시 생각해 봐요.':'답칸을 눌러 써 봐요.');
-  return '<main class="desk"><header class="sheethead"><div><small>'+names.older+'의 연산 노트</small><h1>'+stageName(s.level)+'</h1></div><label class="sheet-progress"><b>'+count+' / '+rows.length+' 완료</b><progress value="'+count+'" max="'+rows.length+'"></progress></label>'+act('home','저장하고 닫기','chip')+'</header><div class="spread"><section class="paper">'+s.questions.slice(offset,offset+5).map((item,j)=>{
+  return '<main class="desk"><header class="sheethead"><div><small>'+names.older+'의 연산 노트</small><h1>'+stageName(s.level)+'</h1></div><label class="sheet-progress"><b>'+count+' / '+rows.length+' 완료</b><progress value="'+count+'" max="'+rows.length+'"></progress></label>'+act('home','저장하고 닫기','chip')+'</header><div class="spread'+(turningPage?' page-turn':'')+'"><section class="paper">'+s.questions.slice(offset,offset+PAGE_SIZE).map((item,j)=>{
     const n=offset+j,r=rows[n],prompt=sheetPrompt(item);
     return '<div class="sumline '+(n===i?'current':'')+'"><small>'+String(n+1).padStart(2,'0')+'</small><strong class="'+(prompt.length>17?'long':'')+'">'+prompt+'</strong>'+act('ink-row:'+n,r.draft||'　','answerbox','aria-label="'+(n+1)+'번 답 쓰기"')+'</div>';
   }).join('')+'</section><aside class="writing"><div class="stamp '+(stamp==='참 잘했어요!'?'praised':'')+'"><img src="./icon-192.png" alt="거북이"><b>'+stamp+'</b></div>'+
@@ -278,7 +299,14 @@ function sheetAction(action,value) {
       if(s.kind!=='check')p.history.push(r.item);
       s.items=rows.filter(x=>x.item).map(x=>x.item);
       const next=rows.findIndex(x=>!x.correct);
-      if(next>=0)s.index=next;
+      if(next>=0){
+        turningPage=Math.floor(i/PAGE_SIZE)!==Math.floor(next/PAGE_SIZE);
+        s.index=next;
+      } else if(s.kind!=='check'){
+        s.attempt=r;
+        advance();
+        return;
+      }
     }else{r.strokes=[];r.draft='';}
   }
   if(action==='ink-next'){
@@ -299,8 +327,9 @@ app.addEventListener('change',event=>{
 function render(focusAction) {
   gardenController?.destroy();
   gardenController=null;
-  app.innerHTML=(screen==='garden'?'':header())+views[screen]()+ (warning?'<div role="alert" class="warning">'+warning+'</div>':'');
-  if(screen==='garden')mountGarden();
+  app.innerHTML=(['garden','ocean','gift'].includes(screen)?'':header())+views[screen]()+ (warning?'<div role="alert" class="warning">'+warning+'</div>':'');
+  turningPage=false;
+  if(screen==='garden'||screen==='ocean')mountGarden();
   if(child==='older'&&screen==='practice')bindInk(app,rowsFor(profile().active)[profile().active.index],persist);
   if (focusAction) {
     const target=[...app.querySelectorAll('button[data-do]')].find(node=>node.dataset.do===focusAction&&!node.disabled);
@@ -337,16 +366,34 @@ function start(kind) {
     if (p.active.kind==='check') p.unfinishedCheck=p.active.items;
   }
   if (kind==='practice') Object.assign(p,{level,topic,mode,format});
-  const questions=kind==='check'?assessment(child):batch(level,topic,format,kind==='review'?reviewTargets(p.history):[]);
+  const questions=kind==='check'?adaptQuestions(assessment(child)):[];
+  p.active={kind,level,topic,format,questions,index:0,attempt:emptyAttempt(),items:[],oceanAtStart:oceanOpen(p)};
+  extendPractice(p);
+  persist();
+  go('practice');
+  maybeSpeak();
+}
+function adaptQuestions(questions) {
   if(child==='older')for(const q of questions){
     if(q.compare){const values=q.cards.map(card=>card.quantity);q.answer=q.cards[q.answer-1].quantity;
       q.instruction=values.join(' · ')+' 중 '+(q.instruction.includes('많은')?'큰 수':'작은 수')+'를 써요.';delete q.cards;}
     else if(q.variant==='story'){q.answer=q.op==='+'?q.a+q.b:q.a-q.b;q.instruction+=q.op==='+'?' 모두 몇 개일까요?':' 몇 개 남았을까요?';delete q.cards;}
   }
-  p.active={kind,level,topic,questions,index:0,attempt:emptyAttempt(),items:[]};
-  persist();
-  go('practice');
-  maybeSpeak();
+  return questions;
+}
+function extendPractice(p) {
+  const s=p.active;
+  if(s.kind==='check'||s.questions.length>=REWARD_SIZE) return;
+  s.oceanAtStart??=oceanOpen(p);
+  // Convert an older saved worksheet before appending to preserve its answered rows.
+  if(child==='older') rowsFor(s);
+  while(s.questions.length<REWARD_SIZE){
+    const skip=s.questions.map(q=>q.signature);
+    const page=batch(s.level,s.topic,s.format??p.format,s.kind==='review'?reviewTargets(p.history):[],skip);
+    const extra=adaptQuestions(page.slice(0,REWARD_SIZE-s.questions.length));
+    s.questions.push(...extra);
+    if(s.rows) s.rows.push(...extra.map(emptyAttempt));
+  }
 }
 function speak(showMessage=true) {
   const p=profile(), q=p.active?.questions[p.active.index];
@@ -400,14 +447,17 @@ function advance(skip=false) {
     if (s.kind==='check') {
       p.checkpoint=assess(child,s.items);
       p.checkpoint.items=s.items;
-    } else p.rewards++;
-    p.result={kind:s.kind,level:s.level,topic:s.topic,items:s.items};
+    }
+    const gift=s.kind==='check'?null:awardFriend(p,s.items);
+    const openedOcean=s.oceanAtStart===false&&oceanOpen(p);
+    p.result={kind:s.kind,level:s.level,topic:s.topic,items:s.items,gift,openedOcean,giftPending:Boolean(gift)};
     p.active=null;
     persist();
-    go('result');
+    go(gift?'gift':'result');
     return;
   }
   s.index++;
+  turningPage=s.index%PAGE_SIZE===0;
   s.attempt=emptyAttempt();
   persist();
   go('practice');
@@ -449,7 +499,7 @@ app.addEventListener('click',event=>{
       break;
     case 'settings-save': Object.assign(p,{mode:arrangement.mode,format:arrangement.format});persist();go('home');break;
     case 'resume':
-      if (p.active) {go('practice');maybeSpeak();}
+      if (p.active) {extendPractice(p);persist();go('practice');maybeSpeak();}
       else {arrangement={level:p.level,topic:p.topic,mode:p.mode,format:p.format};start('practice');}
       break;
     case 'check':start('check');break;
@@ -465,7 +515,13 @@ app.addEventListener('click',event=>{
     case 'next':advance();break;
     case 'key':handleKey(value);break;
     case 'history':go('history');break;
-    case 'garden':go('garden');break;
+    case 'gift':if(p.result?.giftPending)go('gift');break;
+    case 'dismiss-gift':p.result.giftPending=false;persist();go('result');break;
+    case 'ocean':
+    case 'garden':
+      if(action==='ocean'&&!oceanOpen(p))break;
+      if(screen==='gift'){p.result.giftPending=false;persist();}
+      go(action);break;
   }
 });
 function handleKey(value) {

@@ -1,5 +1,5 @@
-const version = 'turtle-forest-v12';
-const assets = ['./','./index.html','./style.css','./app.mjs','./math.mjs','./audio.mjs','./profile-names.mjs','./manifest.webmanifest','./icon-192.png','./icon-512.png','./forest.webp','./piano.ogg','./digits.bin','./ink.mjs','./credits.txt',
+const version = 'turtle-forest-v13';
+const assets = ['./','./index.html','./style.css','./app.mjs','./math.mjs','./audio.mjs','./profile-names.mjs','./manifest.webmanifest','./icon-192.png','./icon-512.png','./forest.webp','./piano.ogg','./digits.bin','./ink.mjs','./credits.txt','./rewards.mjs',
   './garden/garden-engine.js',
   './garden/garden-geometry.js',
   './garden/garden.css',

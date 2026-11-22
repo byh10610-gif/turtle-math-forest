@@ -254,14 +254,14 @@ export function reviewTargets(history) {
   }
   return [...scores.values()].filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,5).map(x=>x.item);
 }
-export function batch(level,topic,format,review=[]) {
+export function batch(level,topic,format,review=[],previous=[]) {
   const questions=[];
   for (let i=0;i<5;i++) {
     const target=review[i%review.length];
     let q;
     for (let attempt=0;attempt<40;attempt++) {
       q=target?generate(target.level,target.topic,format,target.variant):generate(level,topic,format);
-      if (q.signature!==target?.signature && !questions.some(other=>other.signature===q.signature)) break;
+      if (q.signature!==target?.signature && !previous.includes(q.signature) && !questions.some(other=>other.signature===q.signature)) break;
     }
     questions.push(q);
   }
