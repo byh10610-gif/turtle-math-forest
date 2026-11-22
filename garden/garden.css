@@ -89,3 +89,13 @@
 .ocean-scene span:nth-child(4){left:12%;top:47%;opacity:.45}
 .ocean-scene span:nth-child(5){left:86%;top:38%;opacity:.5}
 .ocean-scene span:nth-child(6){left:42%;top:91%;font-size:clamp(14px,3vw,48px)}
+
+.tg-turtle.is-swimming .tg-art {clip-path:inset(0 0 11% 0);translate:0 8%;transition:translate .3s}
+.is-ocean .tg-turtle.is-swimming .tg-art {clip-path:none;translate:none}
+.tg-turtle.is-swimming .turtle-rig {animation:tg-turtle-float 1.55s ease-in-out infinite}
+.tg-turtle.is-swimming .turtle-leg-front,.tg-turtle.is-swimming .turtle-leg-back {animation:tg-turtle-paddle .7s ease-in-out infinite alternate}
+.tg-turtle.is-swimming .turtle-leg-front-far,.tg-turtle.is-swimming .turtle-leg-back-far {animation:tg-turtle-paddle .7s .32s ease-in-out infinite alternate}
+.tg-turtle.is-splashing .tg-art {animation:tg-turtle-splash .52s ease-out}
+@keyframes tg-turtle-float {50%{transform:translateY(-4px)}}
+@keyframes tg-turtle-paddle {from{transform:rotate(-19deg)}to{transform:rotate(21deg)}}
+@keyframes tg-turtle-splash {28%{translate:0 -7%;scale:1.04 .96}75%{translate:0 12%;scale:.98 1.02}}

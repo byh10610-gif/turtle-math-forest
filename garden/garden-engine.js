@@ -77,7 +77,7 @@
         <div class="tg-world" aria-label="정원. 잔디를 누르면 거북이가 걸어와요." tabindex="0">
           ${ocean?'<div class="ocean-scene" aria-hidden="true"><span>🪸</span><span>🪸</span><span>🌿</span><span>🫧</span><span>🫧</span><span>🐚</span></div>':'<img class="tg-background" alt="큰 나무와 꽃, 잔디 산책길과 푸른 연못이 있는 정원" draggable="false">'}
           <button class="tg-hotspot tg-tree-hotspot" data-action="tree" aria-label="나무를 톡, 나뭇잎 날리기"></button>
-          <button class="tg-hotspot tg-pond-hotspot" data-action="pond" aria-label="연못을 톡, 물결 만들기"></button>
+          <button class="tg-hotspot tg-pond-hotspot" data-action="pond" aria-label="연못을 톡, 거북이 헤엄치기"></button>
           <div class="tg-light"></div><div class="tg-placement-marker"></div>
         </div>
         <div class="tg-topbar"><div class="tg-topbar-group">
@@ -114,7 +114,7 @@
     turtleEl.innerHTML='<span class="tg-art">'+makeArt('turtle')+'</span><span class="tg-speech" aria-hidden="true"></span>';
     world.appendChild(turtleEl);
     const bubble=turtleEl.querySelector('.tg-speech');
-    const turtle={x:.38,y:.77,face:1,path:[],speed:0,idle:4,arrive:null,happy:0};
+    const turtle={x:.38,y:.77,face:1,path:[],speed:0,inWater:ocean,idle:4,arrive:null,happy:0};
     for(let i=0;i<12;i++){
       const dot=document.createElement('span');dot.className='tg-firefly';dot.style.cssText=`left:${random(8,92)}%;top:${random(24,80)}%;animation-delay:${random(-6,0)}s`;world.appendChild(dot);
     }
@@ -217,24 +217,74 @@
         world.appendChild(el);after(()=>el.remove(),1700+i*50);
       }
     }
-    function ripple(p){
-      chime('water');const center=G.fishPoint(p);
+    function waterRings(center){
       for(let i=0;i<(reduced?1:3);i++)after(()=>{const el=document.createElement('span');el.className='tg-ripple';el.style.left=center.x*100+'%';el.style.top=center.y*100+'%';world.appendChild(el);after(()=>el.remove(),1600);},i*200);
+    }
+    function ripple(p){
+      chime('water');
+      const center=G.fishPoint(p);
+      waterRings(center);
       for(const actor of actors.values())if(swimming(actor.item.kind))setRoute(actor,G.fishPoint({x:center.x+random(-.03,.03),y:center.y+random(-.03,.03)}),random(3,4));
     }
     function happy(text){turtle.happy=2.5;turtleEl.classList.add('is-happy');burst({x:turtle.x+.02,y:turtle.y-.16},'heart',4);speak(text);chime('welcome');}
-    function goTurtle(target,onArrive){
-      turtle.path=G.walkPath(turtle,G.landPoint(target));turtle.idle=6;turtle.arrive=onArrive||null;turtleEl.classList.remove('is-sleeping');
-      if(reduced){const dest=turtle.path[turtle.path.length-1];if(dest){turtle.x=dest.x;turtle.y=dest.y;}turtle.path=[];renderPositions();if(turtle.arrive){const fn=turtle.arrive;turtle.arrive=null;fn();}}
+    function syncWaterState(splash=true){
+      const wet=ocean||G.inPond(turtle);
+      if(!ocean&&wet!==turtle.inWater&&splash&&!reduced){
+        waterRings({x:turtle.x,y:turtle.y});
+        if(wet){
+          turtleEl.classList.add('is-splashing');
+          after(()=>turtleEl.classList.remove('is-splashing'),520);
+          chime('water');
+        }
+      }
+      turtle.inWater=wet;
+      turtleEl.classList.toggle('is-swimming',wet);
+    }
+    function goTurtle(target,onArrive,{water=false}={}){
+      const destination=water?G.fishPoint(target):G.landPoint(target);
+      turtle.swimTrip=ocean||water||turtle.inWater;
+      turtle.path=turtle.swimTrip?[destination]:G.walkPath(turtle,destination);
+      turtle.idle=6;
+      turtle.arrive=onArrive||null;
+      turtleEl.classList.remove('is-sleeping');
+      if(reduced){
+        Object.assign(turtle,destination);
+        turtle.path=[];
+        syncWaterState(false);
+        renderPositions();
+        const arrived=turtle.arrive;
+        turtle.arrive=null;
+        arrived?.();
+      }
+    }
+    function meetWaterFriend(actor){
+      actor.route=null;
+      actor.rest=8;
+      const direction=turtle.x<actor.x?-1:1;
+      goTurtle({x:actor.x+direction*.055,y:actor.y+.025},()=>{
+        if(!actors.has(actor.item.id))return;
+        actor.rest=1.3;
+        happy(LABELS[actor.item.kind]+' 친구, 같이 헤엄치자!');
+      },{water:true});
+    }
+    function swimToPond(p){
+      waterRings(G.fishPoint(p));
+      speak('연못으로 헤엄치러 갈게!');
+      goTurtle(p,()=>{
+        const friends=[...actors.values()].filter(actor=>watery(actor.item.kind));
+        friends.sort((a,b)=>G.dist(turtle,a)-G.dist(turtle,b));
+        if(friends.length)meetWaterFriend(friends[0]);
+      },{water:true});
     }
     function welcome(item,position){
       speak('새 친구가 왔네! 만나러 갈까?');chime('welcome');
-      const approach=G.landPoint({x:position.x-.07,y:position.y+.045});
+      const water=watery(item.kind);
+      const approach={x:position.x-.07,y:position.y+.045};
       goTurtle(approach,()=>{
         if(!items.some(i=>i.id===item.id&&i.placed))return;
         happy((item.kind==='fish'?'물고기야':LABELS[item.kind]+'야')+', 안녕! 같이 놀자.');
         const friend=actors.get(item.id);if(friend){friend.rest=1.3;friend.el.classList.add('is-greeting');after(()=>friend.el.classList.remove('is-greeting'),900);}
-      });
+      },{water});
       const friend=actors.get(item.id);
       if(friend){let travel=0,from=turtle;for(const to of turtle.path){travel+=Math.hypot((to.x-from.x)*worldRect.width,(to.y-from.y)*worldRect.height);from=to;}friend.route=null;friend.rest=travel/Math.max(17,worldRect.width*.033)+4;}
     }
@@ -267,7 +317,7 @@
         const target=G.FOLIAGE[Math.floor(Math.random()*G.FOLIAGE.length)];
         setRoute(actor,{x:target.x+random(-.025,.025),y:target.y+random(-.02,.02)},random(2.5,4));
         burst(actor,'sparkle',3);speak(k==='ladybug'?'무당벌레야, 나무에서 만나!':'살랑살랑, 같이 놀자!');
-      }else if(swimming(k)){ripple(actor);speak(k==='duck'?'오리야, 물놀이 재밌니?':LABELS[k]+' 친구가 헤엄치네!');}
+      }else if(watery(k)){waterRings(actor);meetWaterFriend(actor);speak(LABELS[k]+' 친구에게 갈게!');}
       else if(walking(k)){actor.el.classList.add('is-greeting');after(()=>actor.el.classList.remove('is-greeting'),850);goTurtle({x:actor.x-.08,y:actor.y+.04},()=>happy(LABELS[k]+'야, 만나서 반가워!'));}
       else{actor.el.classList.add('is-popping');after(()=>actor.el.classList.remove('is-popping'),700);burst(actor,k==='clover'?'sparkle':'heart',4);speak(k==='mushroom'?'동글동글, 버섯 쉼터야!':'예쁜 꽃향기가 나네. 고마워!');}
     }
@@ -358,10 +408,10 @@
       const worldClick=e.target.closest('.tg-world');if(!worldClick)return;
       const p=e.detail===0?{x:.40,y:.73}:pointFromClient(e.clientX,e.clientY);
       if(selectedId){place(selectedId,p);return;}
-      if(action==='turtle'){goTurtle(turtle);happy(['안녕! 만나서 반가워.','쓰담쓰담, 기분 좋아!','우리 같이 산책할까?'][Math.floor(Math.random()*3)]);return;}
+      if(action==='turtle'){goTurtle(turtle,null,{water:turtle.inWater});happy(['안녕! 만나서 반가워.','쓰담쓰담, 기분 좋아!','우리 같이 산책할까?'][Math.floor(Math.random()*3)]);return;}
       if(action==='tree'){treeTap();return;}
       if(ocean){ripple(p);goTurtle(p);speak('보글보글! 같이 헤엄치자.');return;}
-      if(action==='pond'||G.inPond(p)){ripple(p);speak([...actors.values()].some(a=>a.item.kind==='fish')?'물고기야, 여기로 와!':'퐁당! 물결이 동그랗게 퍼져.');return;}
+      if(action==='pond'||G.inPond(p)){swimToPond(e.detail===0?G.POND:p);return;}
       if(watering){burst(p,'sparkle',4);chime('water');speak('풀도 시원하대. 고마워!');return;}
       if(insideWorld(p)){burst(p,'sparkle',2);goTurtle(p,()=>speak('여기까지 왔어!'));speak('응, 그쪽으로 갈게!');}
     }
@@ -370,7 +420,7 @@
     function showHelp(){
       if(app.querySelector('.tg-dialog-wrap'))return;cancelDrag();helpFocus=document.activeElement;
       const wrap=document.createElement('div');wrap.className='tg-dialog-wrap';
-      wrap.innerHTML=`<section class="tg-dialog" role="dialog" aria-modal="true" aria-labelledby="${mountId}-help-title"><h2 id="${mountId}-help-title">우리 정원에서 놀자</h2><p>아래 친구를 <strong>끌어서 놓거나</strong>, 친구를 고른 뒤 정원을 톡 눌러 주세요.</p><p><strong>거북이</strong>를 쓰다듬고, <strong>잔디</strong>를 눌러 불러 보세요.<br><strong>나무</strong>는 나뭇잎을, <strong>연못</strong>은 물결을 보내 줘요.</p><p>친구를 다시 옮기려면 끌어 주세요. 아래 바구니로 데려오면 잠시 쉬어요. 물뿌리개로 꽃도 돌볼 수 있어요.</p><p>${options.demo?'이 화면은 정원 교체용 체험 예제예요. 물고기를 포함한 친구들은 체험용이며, 기존 수학숲 학습 기록과 별도로 저장해요.':'아이마다 받은 선물과 정원 배치를 따로 보관해요.'}</p><p>가로 화면에서 정원이 가장 크게 보여요. 소리 버튼을 켜면 효과음이 나고, 기기에 한국어 목소리가 있으면 인사도 들려요.</p><button class="tg-primary" data-action="close-help">이제 놀러 가자!</button>${options.onReset?'<button class="tg-secondary" data-action="reset-demo">체험 정원을 처음 모습으로</button>':''}</section>`;
+      wrap.innerHTML=`<section class="tg-dialog" role="dialog" aria-modal="true" aria-labelledby="${mountId}-help-title"><h2 id="${mountId}-help-title">우리 정원에서 놀자</h2><p>아래 친구를 <strong>끌어서 놓거나</strong>, 친구를 고른 뒤 정원을 톡 눌러 주세요.</p><p><strong>거북이</strong>를 쓰다듬고, <strong>잔디</strong>를 눌러 불러 보세요.<br><strong>나무</strong>는 나뭇잎을, <strong>연못</strong>은 누르면 거북이가 물에 들어가 헤엄쳐요.</p><p>친구를 다시 옮기려면 끌어 주세요. 아래 바구니로 데려오면 잠시 쉬어요. 물뿌리개로 꽃도 돌볼 수 있어요.</p><p>${options.demo?'이 화면은 정원 교체용 체험 예제예요. 물고기를 포함한 친구들은 체험용이며, 기존 수학숲 학습 기록과 별도로 저장해요.':'아이마다 받은 선물과 정원 배치를 따로 보관해요.'}</p><p>가로 화면에서 정원이 가장 크게 보여요. 소리 버튼을 켜면 효과음이 나고, 기기에 한국어 목소리가 있으면 인사도 들려요.</p><button class="tg-primary" data-action="close-help">이제 놀러 가자!</button>${options.onReset?'<button class="tg-secondary" data-action="reset-demo">체험 정원을 처음 모습으로</button>':''}</section>`;
       app.appendChild(wrap);app.classList.add('motion-paused');wrap.querySelector('.tg-primary').focus();
     }
     function closeHelp(){app.querySelector('.tg-dialog-wrap')?.remove();app.classList.remove('motion-paused');if(helpFocus?.isConnected)helpFocus.focus();lastFrame=0;}
@@ -385,12 +435,13 @@
       turtle.happy=Math.max(0,turtle.happy-dt);turtleEl.classList.toggle('is-happy',turtle.happy>0);
       if(turtle.path.length){
         const dest=turtle.path[0],dx=dest.x-turtle.x,dy=dest.y-turtle.y;
-        const distance=Math.hypot(dx*worldRect.width,dy*worldRect.height),speed=Math.max(17,worldRect.width*.033);
+        const distance=Math.hypot(dx*worldRect.width,dy*worldRect.height),speed=Math.max(17,worldRect.width*(turtle.inWater?.19:turtle.swimTrip?.15:.033));
         turtle.speed=Math.min(speed,turtle.speed+dt*speed*1.5);const step=Math.min(distance,turtle.speed*dt);
         if(distance<2.2){turtle.x=dest.x;turtle.y=dest.y;turtle.path.shift();if(!turtle.path.length){turtle.speed=0;turtle.idle=random(4,8);if(turtle.arrive){const fn=turtle.arrive;turtle.arrive=null;fn();}}}
         else{turtle.x+=dx*step/distance;turtle.y+=dy*step/distance;if(Math.abs(dx)>.005)turtle.face=dx>0?1:-1;}
       }else{turtle.idle-=dt;if(turtle.idle<=0&&turtle.happy<=0){if(night&&Math.random()<.3){turtleEl.classList.add('is-sleeping');turtle.idle=9;speak('바람이 포근해… 잠깐 쉴까?');}else{goTurtle({x:random(.25,.67),y:random(.58,.87)});}}}
-      turtleEl.classList.toggle('is-walking',turtle.path.length>0&&turtle.happy<=0);
+      syncWaterState();
+      turtleEl.classList.toggle('is-walking',!turtle.inWater&&turtle.path.length>0&&turtle.happy<=0);
     }
     function tickActor(actor,dt){
       if(drag?.id===actor.item.id)return;
@@ -430,7 +481,7 @@
     window.addEventListener('blur',cancelDrag,{signal:abort.signal});
     const reducedChange=()=>{reduced=reduceQuery.matches;};reduceQuery.addEventListener?.('change',reducedChange);
     const observer=new ResizeObserver(resize);observer.observe(stage);
-    resize();reconcile();updateSoundButton();
+    syncWaterState(false);resize();reconcile();updateSoundButton();
     after(()=>speak('안녕! 오늘은 어떤 친구가 올까?',4400),650);
     after(()=>hint.classList.add('is-hidden'),10500);
     frame=requestAnimationFrame(loop);

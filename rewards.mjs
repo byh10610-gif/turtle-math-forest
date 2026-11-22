@@ -2,7 +2,7 @@ import {LEGACY_CATALOG} from './garden/integration/legacy-adapter.mjs';
 
 export const PAGE_SIZE=5;
 export const REWARD_SIZE=10;
-export const OCEAN_GOAL=100;
+export const OCEAN_GOAL=200;
 export const landFriends={
   hedgehog:['고슴도치','🦔'], fox:['여우','🦊'], frog:['개구리','🐸'],
   bee:['꿀벌','🐝'], bird:['아기 새','🐦'], owl:['부엉이','🦉'],

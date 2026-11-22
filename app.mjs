@@ -181,7 +181,7 @@ function giftView() {
   return '<main class="gift-page"><div class="gift-sparkles" aria-hidden="true">✦　✧　✦</div>'
     +'<div class="gift-art" aria-hidden="true">'+window.GardenApp.artwork(gift,'earned-gift')+'</div>'
     +'<h1>'+name+' 선물을 받았어요!</h1>'
-    +(openedOcean?'<p>100문제 달성! 바닷속 지도가 열렸어요.</p>':'')
+    +(openedOcean?'<p>'+OCEAN_GOAL+'문제 달성! 바닷속 지도가 열렸어요.</p>':'')
     +'<div class="compact center">'+act(oceanKind(gift)?'ocean':'garden',oceanKind(gift)?'바닷속 가기':'정원에 놓으러 가기','button primary')
     +(openedOcean&&!oceanKind(gift)?act('ocean','바닷속 가기','button'):'')
     +act('dismiss-gift','풀이 결과 보기','button')+'</div></main>';
@@ -199,7 +199,7 @@ function resultView() {
       '<div class="compact center">'+act('advice:add','덧셈 시작','button primary')+act('advice:sub','뺄셈 시작','button')+'</div>':
       '<div class="result-stats">'+[['independent','처음에 혼자'],['hint','도움 받고'],['retry','다시 도전']].map(([id,title])=>'<div><strong>'+count(id)+'</strong><small>'+title+'</small></div>').join('')+'</div>'+
       (r.gift?'<p>'+window.GardenApp.labels[r.gift]+' 선물을 받았어요.</p>':r.items.filter(i=>i.status!=='skipped').length>=REWARD_SIZE?'<p>모든 친구를 만났어요!</p>':'')+
-      (r.openedOcean?act('ocean','100문제 달성 · 바닷속 가기','button'):'')+
+      (r.openedOcean?act('ocean',OCEAN_GOAL+'문제 달성 · 바닷속 가기','button'):'')+
       (next?'<div class="compact center">'+next+'</div>':'')+
       '<div class="compact center">'+act('garden','정원 꾸미기','button primary')+act('home','내 숲으로','button')+'</div>')+'</section></main>';
 }
