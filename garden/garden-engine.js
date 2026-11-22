@@ -72,6 +72,8 @@
     const mobile=k=>flying(k)||swimming(k)||walking(k);
     const makeArt=kind=>artwork(kind,mountId+'-art-'+(++serial));
     const background=options.backgroundUrl||'./assets/garden-background.png';
+    const food={...options.food};
+    let meal=null;
     host.innerHTML=`<section class="tg-app${ocean?' is-ocean':''}" aria-label="${ocean?'바닷속 지도':'친구들이 사는 정원'}">
       <div class="tg-stage">
         <div class="tg-world" aria-label="정원. 잔디를 누르면 거북이가 걸어와요." tabindex="0">
@@ -95,6 +97,7 @@
         <div class="tg-tray-copy"><h2 class="tg-tray-title">새로 온 친구들 <span class="tg-count">0</span></h2><p>꾹 끌어 정원에 놓아요.<br>하나 누르고, 정원을 톡 해도 돼요.</p></div>
         <div class="tg-tray-list" role="group" aria-label="정원에 놓을 선물. 옆으로 넘겨 볼 수 있어요." tabindex="0"></div>
         <div class="tg-tray-actions">
+          ${!ocean&&options.onFeed?`<button class="tg-tool" data-action="feed"><span class="tg-food-icon" aria-hidden="true">🥬</span><span class="tg-tool-label"></span></button>`:''}
           <button class="tg-tool" data-action="water" aria-label="물뿌리개" aria-pressed="false">${icon('water')}<span class="tg-tool-label">물주기</span></button>
           <button class="tg-tool" data-action="undo" aria-label="마지막 배치 되돌리기" disabled>${icon('undo')}<span class="tg-tool-label">되돌리기</span></button>
         </div>
@@ -114,7 +117,7 @@
     turtleEl.innerHTML='<span class="tg-art">'+makeArt('turtle')+'</span><span class="tg-speech" aria-hidden="true"></span>';
     world.appendChild(turtleEl);
     const bubble=turtleEl.querySelector('.tg-speech');
-    const turtle={x:.38,y:.77,face:1,path:[],speed:0,inWater:ocean,idle:4,arrive:null,happy:0};
+    const turtle={x:.38,y:.77,face:1,path:[],speed:0,inWater:ocean,idle:4,arrive:null,happy:0,nextSwim:random(13,21)};
     for(let i=0;i<12;i++){
       const dot=document.createElement('span');dot.className='tg-firefly';dot.style.cssText=`left:${random(8,92)}%;top:${random(24,80)}%;animation-delay:${random(-6,0)}s`;world.appendChild(dot);
     }
@@ -132,7 +135,7 @@
       const width=Math.min(r.width,r.height*imageRatio),height=width/imageRatio;
       world.style.width=width+'px';world.style.height=height+'px';
       worldRect=world.getBoundingClientRect();
-      turtleSize=G.clamp(worldRect.width*.147,105,192);
+      turtleSize=G.clamp(worldRect.width*.124,88,162);
       world.style.setProperty('--turtle-size',turtleSize+'px');
       for(const actor of actors.values())sizeActor(actor);
       renderPositions();
@@ -240,7 +243,8 @@
       turtle.inWater=wet;
       turtleEl.classList.toggle('is-swimming',wet);
     }
-    function goTurtle(target,onArrive,{water=false}={}){
+    function goTurtle(target,onArrive,{water=false,feeding=false}={}){
+      if(!feeding)clearMeal();
       const destination=water?G.fishPoint(target):G.landPoint(target);
       turtle.swimTrip=ocean||water||turtle.inWater;
       turtle.path=turtle.swimTrip?[destination]:G.walkPath(turtle,destination);
@@ -267,14 +271,54 @@
         happy(LABELS[actor.item.kind]+' 친구, 같이 헤엄치자!');
       },{water:true});
     }
-    function swimToPond(p){
-      waterRings(G.fishPoint(p));
-      speak('연못으로 헤엄치러 갈게!');
+    function swimToPond(p,automatic=false){
+      turtle.nextSwim=clock+random(23,39);
+      if(!automatic){
+        waterRings(G.fishPoint(p));
+        speak('연못으로 헤엄치러 갈게!');
+      }
       goTurtle(p,()=>{
-        const friends=[...actors.values()].filter(actor=>watery(actor.item.kind));
+        const friends=[...actors.values()].filter(actor=>swimming(actor.item.kind));
         friends.sort((a,b)=>G.dist(turtle,a)-G.dist(turtle,b));
         if(friends.length)meetWaterFriend(friends[0]);
       },{water:true});
+    }
+    function refreshFood(){
+      const button=app.querySelector('[data-action="feed"]');
+      if(!button)return;
+      const kinds=Object.keys(options.menu);
+      const count=kinds.reduce((total,kind)=>total+(food[kind]??0),0);
+      button.disabled=!count||Boolean(meal);
+      button.setAttribute('aria-label','초롱이 간식 주기, '+count+'개 남음');
+      button.querySelector('.tg-tool-label').textContent='간식 '+count;
+    }
+    function clearMeal(){
+      if(!meal)return;
+      meal.remove();
+      meal=null;
+      refreshFood();
+    }
+    function feedTurtle(){
+      const available=Object.keys(options.menu).filter(kind=>food[kind]>0);
+      if(meal||available.length===0)return;
+      const kind=available[Math.floor(Math.random()*available.length)];
+      const [name,emoji]=options.menu[kind];
+      const spot=G.landPoint({x:turtle.x-.11,y:turtle.y+.09});
+      meal=document.createElement('span');
+      meal.className='tg-meal';
+      meal.textContent=emoji;
+      meal.style.left=spot.x*100+'%';
+      meal.style.top=spot.y*100+'%';
+      world.appendChild(meal);
+      refreshFood();
+      speak(name+' 냄새가 나!');
+      goTurtle(spot,()=>{
+        const eaten=options.onFeed(kind);
+        if(eaten)food[kind]--;
+        clearMeal();
+        if(eaten)happy('아삭아삭, 맛있다! 고마워!');
+        else toast('간식을 저장하지 못했어요. 다시 눌러 주세요.');
+      },{feeding:true});
     }
     function welcome(item,position){
       speak('새 친구가 왔네! 만나러 갈까?');chime('welcome');
@@ -333,7 +377,7 @@
       if(watering){burst({x:.16,y:.48},'sparkle',5);speak('나무도 시원하대!');}
     }
     function undo(){
-      if(!undoStack.length)return;cancelDrag();items=undoStack.pop();selectedId=null;
+      if(!undoStack.length)return;cancelDrag();clearMeal();items=undoStack.pop();selectedId=null;
       turtle.arrive=null;turtle.path=[];turtle.speed=0;turtle.idle=5;turtleEl.classList.remove('is-walking');
       for(const actor of actors.values())actor.el.remove();actors.clear();reconcile();notify();toast('조금 전 정원으로 돌아왔어요.');
     }
@@ -402,6 +446,7 @@
       if(action==='exit'){options.onExit?options.onExit():showHelp();return;}
       if(action==='help'){showHelp();return;}
       if(action==='undo'){undo();return;}
+      if(action==='feed'){feedTurtle();return;}
       if(action==='water'){watering=!watering;selectedId=null;reconcile();app.querySelector('[data-action="water"]').setAttribute('aria-pressed',String(watering));toast(watering?'꽃이나 나무를 톡 눌러 물을 주세요.':'물뿌리개를 내려놓았어요.');return;}
       if(action==='night'){night=!night;app.classList.toggle('is-night',night);const btn=app.querySelector('[data-action="night"]');btn.setAttribute('aria-pressed',String(night));btn.setAttribute('aria-label',night?'밝은 낮으로 바꾸기':'반딧불이 저녁으로 바꾸기');btn.innerHTML=icon(night?'moon':'sun');speak(night?'반짝반짝, 반딧불이가 나왔어.':'햇살이 따뜻해!');return;}
       if(action==='sound'){audioOn=!audioOn;updateSoundButton();if(!audioOn&&appOwnedSpeech){window.speechSynthesis?.cancel();appOwnedSpeech=false;}if(audioOn){chime('welcome');speak('안녕! 나는 초롱이야.');}return;}
@@ -435,11 +480,27 @@
       turtle.happy=Math.max(0,turtle.happy-dt);turtleEl.classList.toggle('is-happy',turtle.happy>0);
       if(turtle.path.length){
         const dest=turtle.path[0],dx=dest.x-turtle.x,dy=dest.y-turtle.y;
-        const distance=Math.hypot(dx*worldRect.width,dy*worldRect.height),speed=Math.max(17,worldRect.width*(turtle.inWater?.19:turtle.swimTrip?.15:.033));
+        const distance=Math.hypot(dx*worldRect.width,dy*worldRect.height),speed=Math.max(17,worldRect.width*(turtle.inWater ? .19 : (turtle.swimTrip||meal ? .15 : .057)));
         turtle.speed=Math.min(speed,turtle.speed+dt*speed*1.5);const step=Math.min(distance,turtle.speed*dt);
         if(distance<2.2){turtle.x=dest.x;turtle.y=dest.y;turtle.path.shift();if(!turtle.path.length){turtle.speed=0;turtle.idle=random(4,8);if(turtle.arrive){const fn=turtle.arrive;turtle.arrive=null;fn();}}}
         else{turtle.x+=dx*step/distance;turtle.y+=dy*step/distance;if(Math.abs(dx)>.005)turtle.face=dx>0?1:-1;}
-      }else{turtle.idle-=dt;if(turtle.idle<=0&&turtle.happy<=0){if(night&&Math.random()<.3){turtleEl.classList.add('is-sleeping');turtle.idle=9;speak('바람이 포근해… 잠깐 쉴까?');}else{goTurtle({x:random(.25,.67),y:random(.58,.87)});}}}
+      }else{
+        turtle.idle-=dt;
+        if(turtle.idle<=0&&turtle.happy<=0){
+          if(!ocean&&turtle.inWater){
+            goTurtle({x:.48,y:.82},()=>{
+              turtle.nextSwim=Math.max(turtle.nextSwim,clock+random(17,25));
+            });
+          }else if(!ocean&&clock>=turtle.nextSwim){
+            swimToPond({x:random(.68,.8),y:random(.54,.62)},true);
+          }else if(night&&Math.random()<.3){
+            turtleEl.classList.add('is-sleeping');turtle.idle=9;
+            speak('바람이 포근해… 잠깐 쉴까?');
+          }else{
+            goTurtle({x:random(.25,.67),y:random(.58,.87)});
+          }
+        }
+      }
       syncWaterState();
       turtleEl.classList.toggle('is-walking',!turtle.inWater&&turtle.path.length>0&&turtle.happy<=0);
     }
@@ -481,7 +542,7 @@
     window.addEventListener('blur',cancelDrag,{signal:abort.signal});
     const reducedChange=()=>{reduced=reduceQuery.matches;};reduceQuery.addEventListener?.('change',reducedChange);
     const observer=new ResizeObserver(resize);observer.observe(stage);
-    syncWaterState(false);resize();reconcile();updateSoundButton();
+    syncWaterState(false);resize();reconcile();updateSoundButton();refreshFood();
     after(()=>speak('안녕! 오늘은 어떤 친구가 올까?',4400),650);
     after(()=>hint.classList.add('is-hidden'),10500);
     frame=requestAnimationFrame(loop);

@@ -99,3 +99,10 @@
 @keyframes tg-turtle-float {50%{transform:translateY(-4px)}}
 @keyframes tg-turtle-paddle {from{transform:rotate(-19deg)}to{transform:rotate(21deg)}}
 @keyframes tg-turtle-splash {28%{translate:0 -7%;scale:1.04 .96}75%{translate:0 12%;scale:.98 1.02}}
+
+.tg-turtle .tg-art {transition:translate .32s,scale .32s,clip-path .32s}
+.tg-app:not(.is-ocean) .tg-turtle.is-swimming .tg-art {clip-path:inset(0 0 29% 0);translate:0 15%;scale:.82;transform-origin:center 68%}
+.tg-app:not(.is-ocean) .tg-turtle.is-swimming::after {content:"";position:absolute;left:16%;right:16%;top:69%;height:11%;pointer-events:none;background:radial-gradient(ellipse at center,#c5f8e24a,transparent 68%);border-bottom:2px solid #e9fff0ad;border-radius:50%;animation:tg-wake 1.55s ease-in-out infinite}
+.tg-meal {position:absolute;z-index:35;transform:translate(-50%,-55%);font-size:clamp(24px,4.8vw,48px);line-height:1;pointer-events:none;filter:drop-shadow(0 4px 3px #35475d44)}
+.tg-food-icon {font-size:1.25rem;line-height:1}
+@keyframes tg-wake {50%{scale:1.1 .8;opacity:.6}}

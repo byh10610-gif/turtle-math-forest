@@ -37,3 +37,16 @@ export function awardFriend(profile,items) {
 
 const ages=['','만 3–4세','만 4–5세','만 4–6세','만 5–6세','만 5–7세','만 6–7세','만 6–7세','만 6–8세','만 6–8세','만 7–8세','만 7–8세','만 7–8세','만 7–8세','만 7–8세','만 6–8세','만 7–8세','만 6–8세'];
 export const ageHint=level=>ages[level]||'';
+
+
+export const turtleMeals=Object.freeze({
+  lettuce:['상추 잎','🥬'], cucumber:['오이 조각','🥒'],
+  carrot:['당근 조각','🥕'], strawberry:['딸기 한 조각','🍓'],
+});
+export function awardMeal(profile,items) {
+  if (items.filter(item=>item.status!=='skipped').length<REWARD_SIZE) return null;
+  const options=Object.keys(turtleMeals).filter(kind=>kind!==profile.result?.meal);
+  const kind=options[Math.floor(Math.random()*options.length)];
+  profile.turtleFood={...profile.turtleFood,[kind]:(profile.turtleFood?.[kind]??0)+1};
+  return kind;
+}

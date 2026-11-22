@@ -1,5 +1,6 @@
-const version = 'turtle-forest-v14';
-const assets = ['./','./index.html','./style.css','./app.mjs','./math.mjs','./audio.mjs','./profile-names.mjs','./manifest.webmanifest','./icon-192.png','./icon-512.png','./forest.webp','./piano.ogg','./digits.bin','./ink.mjs','./credits.txt','./rewards.mjs',
+const release = 15;
+const version = 'turtle-forest-v'+release;
+const assets = ['./','./index.html','./style.css','./app.mjs','./math.mjs','./audio.mjs','./profile-names.mjs','./manifest.webmanifest','./icon-192.png','./icon-512.png','./forest.webp','./piano.ogg','./digits.bin','./ink.mjs','./credits.txt','./rewards.mjs','./updates.mjs',
   './garden/garden-engine.js',
   './garden/garden-geometry.js',
   './garden/garden.css',
@@ -41,4 +42,8 @@ self.addEventListener('fetch',event=>{
   if (assets.some(path=>new URL(path,self.registration.scope).href===asset.href)) {
     event.respondWith(caches.open(version).then(cache=>cache.match(request)).then(cached=>cached || fetch(request)));
   }
+});
+
+self.addEventListener('message',event=>{
+  if(event.data==='GET_RELEASE')event.source?.postMessage({type:'release',release});
 });

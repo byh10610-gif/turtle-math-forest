@@ -1,4 +1,5 @@
-import {PAGE_SIZE,REWARD_SIZE,OCEAN_GOAL,solvedCount,oceanOpen,oceanKind,awardFriend,ageHint,landFriends,oceanFriends} from './rewards.mjs';
+import {watchForUpdates} from './updates.mjs';
+import {PAGE_SIZE,REWARD_SIZE,OCEAN_GOAL,solvedCount,oceanOpen,oceanKind,awardFriend,ageHint,landFriends,oceanFriends,awardMeal,turtleMeals} from './rewards.mjs';
 import './garden/assets/characters.js';
 import './garden/garden-geometry.js';
 import './garden/garden-engine.js';
@@ -33,8 +34,8 @@ function stopNarration() {
   audio.duck(false);
 }
 function persist() {
-  try {save(localStorage,state);warning='';}
-  catch {warning='기기 저장 공간을 사용할 수 없어요. 브라우저의 사이트 저장 설정을 확인해 주세요.';}
+  try {save(localStorage,state);warning='';return true;}
+  catch {warning='기기 저장 공간을 사용할 수 없어요. 브라우저의 사이트 저장 설정을 확인해 주세요.';return false;}
 }
 const act = (action,text,classes='button',attrs='') => '<button type="button" class="'+classes+'" data-do="'+action+'" '+attrs+'>'+text+'</button>';
 const muted = text=>'<p class="muted">'+text+'</p>';
@@ -176,11 +177,13 @@ function mapLinks(p) {
     +(done>=OCEAN_GOAL?act('ocean','바닷속 지도','button'):'<small class="ocean-progress">바닷속까지 '+done+' / '+OCEAN_GOAL+'문제</small>');
 }
 function giftView() {
-  const {gift,openedOcean}=profile().result;
-  const name=window.GardenApp.labels[gift];
+  const {gift,openedOcean,meal}=profile().result;
+  const [foodName,foodIcon]=turtleMeals[meal]??[];
+  const name=gift?window.GardenApp.labels[gift]:foodName;
   return '<main class="gift-page"><div class="gift-sparkles" aria-hidden="true">✦　✧　✦</div>'
-    +'<div class="gift-art" aria-hidden="true">'+window.GardenApp.artwork(gift,'earned-gift')+'</div>'
+    +'<div class="gift-art" aria-hidden="true">'+(gift?window.GardenApp.artwork(gift,'earned-gift'):icon(foodIcon,'tg-emoji'))+'</div>'
     +'<h1>'+name+' 선물을 받았어요!</h1>'
+    +(gift&&meal?'<p>'+foodIcon+' 초롱이 간식도 받았어요. '+foodName+'</p>':'')
     +(openedOcean?'<p>'+OCEAN_GOAL+'문제 달성! 바닷속 지도가 열렸어요.</p>':'')
     +'<div class="compact center">'+act(oceanKind(gift)?'ocean':'garden',oceanKind(gift)?'바닷속 가기':'정원에 놓으러 가기','button primary')
     +(openedOcean&&!oceanKind(gift)?act('ocean','바닷속 가기','button'):'')
@@ -198,7 +201,7 @@ function resultView() {
       (advice.ten?muted('10 만들기도 함께 연습해요.'):'')+(advice.unconfirmed?muted('건너뛴 문제는 아직 확인하지 않았어요.'):'')+
       '<div class="compact center">'+act('advice:add','덧셈 시작','button primary')+act('advice:sub','뺄셈 시작','button')+'</div>':
       '<div class="result-stats">'+[['independent','처음에 혼자'],['hint','도움 받고'],['retry','다시 도전']].map(([id,title])=>'<div><strong>'+count(id)+'</strong><small>'+title+'</small></div>').join('')+'</div>'+
-      (r.gift?'<p>'+window.GardenApp.labels[r.gift]+' 선물을 받았어요.</p>':r.items.filter(i=>i.status!=='skipped').length>=REWARD_SIZE?'<p>모든 친구를 만났어요!</p>':'')+
+      (r.gift?'<p>'+window.GardenApp.labels[r.gift]+' 선물을 받았어요.</p>':r.meal?'<p>'+turtleMeals[r.meal][0]+' 간식을 받았어요.</p>':'')+
       (r.openedOcean?act('ocean',OCEAN_GOAL+'문제 달성 · 바닷속 가기','button'):'')+
       (next?'<div class="compact center">'+next+'</div>':'')+
       '<div class="compact center">'+act('garden','정원 꾸미기','button primary')+act('home','내 숲으로','button')+'</div>')+'</section></main>';
@@ -217,6 +220,15 @@ function mountGarden() {
       profileId, ocean, items:items.filter(item=>oceanKind(item.kind)===ocean),
       backgroundUrl:new URL('./garden/assets/garden-background.webp',import.meta.url).href,
       effects:Boolean(p.effects), voiceEnabled:Boolean(p.sound),
+      menu:turtleMeals, food:p.turtleFood,
+      onFeed(kind) {
+        const count=p.turtleFood?.[kind]??0;
+        if(child!==profileId||!host.isConnected||count<1)return false;
+        p.turtleFood[kind]--;
+        if(persist())return true;
+        p.turtleFood[kind]=count;
+        return false;
+      },
       onChange(layout) {
         if (child!==profileId||screen!==(ocean?'ocean':'garden')||!host.isConnected) return;
         const next=withGardenLayout(p,layout).gardenV2;
@@ -339,6 +351,7 @@ function render(focusAction) {
 function go(page) {
   if (screen==='practice' && page!=='practice') stopNarration();
   screen=page;
+  if(updateReady&&(page==='home'||page==='profiles')){location.reload();return;}
   syncMusic();
   window.scrollTo(0,0);
   render();
@@ -449,11 +462,12 @@ function advance(skip=false) {
       p.checkpoint.items=s.items;
     }
     const gift=s.kind==='check'?null:awardFriend(p,s.items);
+    const meal=s.kind==='check'?null:awardMeal(p,s.items);
     const openedOcean=s.oceanAtStart===false&&oceanOpen(p);
-    p.result={kind:s.kind,level:s.level,topic:s.topic,items:s.items,gift,openedOcean,giftPending:Boolean(gift)};
+    p.result={kind:s.kind,level:s.level,topic:s.topic,items:s.items,gift,meal,openedOcean,giftPending:Boolean(gift||meal)};
     p.active=null;
     persist();
-    go(gift?'gift':'result');
+    go(gift||meal?'gift':'result');
     return;
   }
   s.index++;
@@ -542,14 +556,22 @@ document.addEventListener('keydown',event=>{
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;render();});
 window.addEventListener('appinstalled',()=>{installPrompt=null;render();});
 document.addEventListener('visibilitychange',syncMusic);
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').then(()=>navigator.serviceWorker.ready).then(()=>{
-    offlineReady=true;
-    if(screen==='profiles') render();
-  }).catch(()=>{
-    offlineReady=false;
-  });
+let updateReady=false;
+function offerUpdate() {
+  if(updateReady)return;
+  updateReady=true;
+  if(screen==='profiles'||screen==='home'){location.reload();return;}
+  const button=document.createElement('button');
+  button.className='button primary app-update';
+  button.textContent='새 버전 적용';
+  button.addEventListener('click',()=>location.reload(),{once:true});
+  document.body.appendChild(button);
 }
+void watchForUpdates(offerUpdate,()=>{
+  offlineReady=true;
+  if(screen==='profiles')render();
+}).catch(()=>{offlineReady=false;});
+
 render();
 window.speechSynthesis?.getVoices();
 
