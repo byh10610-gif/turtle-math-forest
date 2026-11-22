@@ -1,4 +1,4 @@
-const release = 15;
+const release = 16;
 const version = 'turtle-forest-v'+release;
 const assets = ['./','./index.html','./style.css','./app.mjs','./math.mjs','./audio.mjs','./profile-names.mjs','./manifest.webmanifest','./icon-192.png','./icon-512.png','./forest.webp','./piano.ogg','./digits.bin','./ink.mjs','./credits.txt','./rewards.mjs','./updates.mjs',
   './garden/garden-engine.js',

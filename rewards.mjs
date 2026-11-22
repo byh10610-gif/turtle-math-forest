@@ -42,6 +42,9 @@ export const ageHint=level=>ages[level]||'';
 export const turtleMeals=Object.freeze({
   lettuce:['상추 잎','🥬'], cucumber:['오이 조각','🥒'],
   carrot:['당근 조각','🥕'], strawberry:['딸기 한 조각','🍓'],
+  sweetPotato:['고구마 조각','🍠'], dandelion:['민들레 꽃','🌼'],
+  apple:['사과 조각','🍎'], blueberry:['블루베리 한 알','🫐'],
+  pepper:['파프리카 조각','🫑'], watermelon:['수박 한 조각','🍉'],
 });
 export function awardMeal(profile,items) {
   if (items.filter(item=>item.status!=='skipped').length<REWARD_SIZE) return null;

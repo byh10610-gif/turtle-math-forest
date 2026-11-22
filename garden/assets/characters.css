@@ -64,3 +64,11 @@
   .garden-art *, .is-walking .garden-art *, .is-happy .garden-art *, .is-flying .garden-art * { animation: none !important; }
 }
 .motion-paused .garden-art * { animation-play-state: paused !important; }
+
+.turtle-chew {opacity:0}
+.is-eating .art-turtle .turtle-head {animation:tg-bite-head .37s ease-in-out 3 .22s}
+.is-eating .turtle-smile {animation:tg-hide-smile .37s steps(1) 3 .22s}
+.is-eating .turtle-chew {transform-box:fill-box;transform-origin:center;animation:tg-chew .37s ease-in-out 3 .22s}
+@keyframes tg-bite-head {55% {transform:translate(4px,18px) rotate(17deg)}}
+@keyframes tg-hide-smile {35%,70% {opacity:0} 71% {opacity:1}}
+@keyframes tg-chew {0%,25%,90%,100% {opacity:0;scale:1 .2} 45%,70% {opacity:1;scale:1 1}}

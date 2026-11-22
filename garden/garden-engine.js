@@ -26,7 +26,7 @@
   const copy=items=>items.map(i=>({...i}));
   const moreArt={};
   function artwork(kind,id){
-    return moreArt[kind]||window.GardenArt[kind]?.(id)||'';
+    return window.GardenArt[kind]?.(id)||moreArt[kind]||'';
   }
   function addFriends(friends) {
     for(const [kind,[name,emoji]] of Object.entries(friends)){
@@ -296,28 +296,74 @@
       if(!meal)return;
       meal.remove();
       meal=null;
+      turtleEl.classList.remove('is-eating');
       refreshFood();
     }
-    function feedTurtle(){
-      const available=Object.keys(options.menu).filter(kind=>food[kind]>0);
-      if(meal||available.length===0)return;
-      const kind=available[Math.floor(Math.random()*available.length)];
-      const [name,emoji]=options.menu[kind];
-      const spot=G.landPoint({x:turtle.x-.11,y:turtle.y+.09});
-      meal=document.createElement('span');
-      meal.className='tg-meal';
-      meal.textContent=emoji;
-      meal.style.left=spot.x*100+'%';
-      meal.style.top=spot.y*100+'%';
-      world.appendChild(meal);
-      refreshFood();
-      speak(name+' 냄새가 나!');
-      goTurtle(spot,()=>{
+    function crunch(){
+      if(!audioOn)return;
+      try {
+        const Context=window.AudioContext||window.webkitAudioContext;
+        if(!Context)return;
+        audioContext=audioContext||new Context();
+        if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+        const length=Math.floor(audioContext.sampleRate*.095);
+        const buffer=audioContext.createBuffer(1,length,audioContext.sampleRate);
+        const samples=buffer.getChannelData(0);
+        for(let i=0;i<length;i++)samples[i]=(Math.random()*2-1)*Math.pow(1-i/length,4)*.1;
+        const sound=audioContext.createBufferSource();
+        sound.buffer=buffer;
+        sound.connect(audioContext.destination);
+        sound.start();
+      } catch { /* A visual bite is still shown if sound is unavailable. */ }
+    }
+    function eatMeal(serving,spot,kind){
+      if(meal!==serving)return;
+      turtle.idle=3;
+      turtleEl.classList.add('is-eating');
+      speak('아삭아삭!',1500);
+      for(let bite=1;bite<=3;bite++){
+        after(()=>{
+          if(meal!==serving)return;
+          serving.dataset.bites=String(bite);
+          crunch();
+          burst({x:spot.x,y:spot.y-.012},'sparkle',2);
+        },bite*370);
+      }
+      after(()=>{
+        if(meal!==serving)return;
         const eaten=options.onFeed(kind);
         if(eaten)food[kind]--;
         clearMeal();
         if(eaten)happy('아삭아삭, 맛있다! 고마워!');
         else toast('간식을 저장하지 못했어요. 다시 눌러 주세요.');
+      },1450);
+    }
+    function feedTurtle(button){
+      const available=Object.keys(options.menu).filter(kind=>food[kind]>0);
+      if(meal||available.length===0)return;
+      const kind=available[Math.floor(Math.random()*available.length)];
+      const [name,emoji]=options.menu[kind];
+      const spot=G.landPoint({x:turtle.x-.12,y:turtle.y+.09});
+      const direction=turtle.x<=spot.x?1:-1;
+      const approach=G.landPoint({x:spot.x-direction*.048,y:spot.y+.012});
+      const buttonRect=button.getBoundingClientRect();
+      const fromX=buttonRect.x+buttonRect.width/2-worldRect.left-spot.x*worldRect.width;
+      const fromY=buttonRect.y+buttonRect.height/2-worldRect.top-spot.y*worldRect.height;
+      const servedAt=performance.now();
+      const serving=document.createElement('span');
+      serving.className='tg-meal';
+      serving.textContent=emoji;
+      serving.style.left=spot.x*100+'%';
+      serving.style.top=spot.y*100+'%';
+      serving.style.setProperty('--meal-from-x',fromX+'px');
+      serving.style.setProperty('--meal-from-y',fromY+'px');
+      world.appendChild(serving);
+      meal=serving;
+      refreshFood();
+      speak(name+' 냄새가 나!');
+      goTurtle(approach,()=>{
+        turtle.face=direction;
+        after(()=>eatMeal(serving,spot,kind),reduced?0:Math.max(0,430-(performance.now()-servedAt)));
       },{feeding:true});
     }
     function welcome(item,position){
@@ -446,7 +492,7 @@
       if(action==='exit'){options.onExit?options.onExit():showHelp();return;}
       if(action==='help'){showHelp();return;}
       if(action==='undo'){undo();return;}
-      if(action==='feed'){feedTurtle();return;}
+      if(action==='feed'){feedTurtle(e.target.closest('button'));return;}
       if(action==='water'){watering=!watering;selectedId=null;reconcile();app.querySelector('[data-action="water"]').setAttribute('aria-pressed',String(watering));toast(watering?'꽃이나 나무를 톡 눌러 물을 주세요.':'물뿌리개를 내려놓았어요.');return;}
       if(action==='night'){night=!night;app.classList.toggle('is-night',night);const btn=app.querySelector('[data-action="night"]');btn.setAttribute('aria-pressed',String(night));btn.setAttribute('aria-label',night?'밝은 낮으로 바꾸기':'반딧불이 저녁으로 바꾸기');btn.innerHTML=icon(night?'moon':'sun');speak(night?'반짝반짝, 반딧불이가 나왔어.':'햇살이 따뜻해!');return;}
       if(action==='sound'){audioOn=!audioOn;updateSoundButton();if(!audioOn&&appOwnedSpeech){window.speechSynthesis?.cancel();appOwnedSpeech=false;}if(audioOn){chime('welcome');speak('안녕! 나는 초롱이야.');}return;}
@@ -543,7 +589,7 @@
     const reducedChange=()=>{reduced=reduceQuery.matches;};reduceQuery.addEventListener?.('change',reducedChange);
     const observer=new ResizeObserver(resize);observer.observe(stage);
     syncWaterState(false);resize();reconcile();updateSoundButton();refreshFood();
-    after(()=>speak('안녕! 오늘은 어떤 친구가 올까?',4400),650);
+    after(()=>{if(!meal)speak('안녕! 오늘은 어떤 친구가 올까?',4400);},650);
     after(()=>hint.classList.add('is-hidden'),10500);
     frame=requestAnimationFrame(loop);
     return{

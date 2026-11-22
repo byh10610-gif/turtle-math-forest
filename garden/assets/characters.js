@@ -57,8 +57,9 @@
           <path class="turtle-closed-eyes" d="M155 95q9-9 18 0m20 0q9-9 18 0" fill="none" stroke="#485c3c" stroke-width="3.5" stroke-linecap="round"/>
           <path d="M158 73q6-4 12-1m26-2q7-3 12 2" fill="none" stroke="#779763" stroke-width="2.8" stroke-linecap="round"/>
           <ellipse cx="180" cy="107" rx="1.8" ry="1.4" fill="#718b59"/><ellipse cx="189" cy="106" rx="1.8" ry="1.4" fill="#718b59"/>
-          <path d="M173 118 Q184 130 197 116" fill="none" stroke="#60764d" stroke-width="3" stroke-linecap="round"/>
-          <path d="M177 121Q186 128 193 120" fill="#efb29f" opacity=".85"/>
+          <ellipse class="turtle-chew" cx="186" cy="121" rx="11" ry="7" fill="#79604d"/>
+          <path class="turtle-smile" d="M173 118 Q184 130 197 116" fill="none" stroke="#60764d" stroke-width="3" stroke-linecap="round"/>
+          <path class="turtle-smile" d="M177 121Q186 128 193 120" fill="#efb29f" opacity=".85"/>
           <g class="turtle-blossom" transform="translate(151 58) rotate(-20)">
             <path d="M0 0Q-17-16-17-3Q-16 7 0 5" fill="#8bbf88"/>
             <path d="M0 0Q4-17 12-9Q19 1 4 6" fill="#73a974"/>
@@ -165,5 +166,135 @@
     const p = id(prefix);
     return wrap('duck', `<defs><radialGradient id="${p}-feather" cx=".35" cy=".25" r=".9"><stop stop-color="#fff4bd"/><stop offset=".65" stop-color="#f3d990"/><stop offset="1" stop-color="#e3b975"/></radialGradient></defs>${shadow(81,140,49,6)}<path d="M63 131l-7 11q8 5 20-1l-1-10m25 0 2 10q13 5 19-2l-10-9" fill="#d6a674"/><path d="M52 105Q35 96 30 87Q25 106 38 118" fill="#e7c67f"/><ellipse cx="79" cy="112" rx="45" ry="28" fill="url(#${p}-feather)"/><path class="duck-wing" d="M53 108Q86 91 96 116Q79 134 53 108Z" fill="#e8c67e"/><path d="M61 111q14 9 23 6" fill="none" stroke="#fae4a2" stroke-width="2.5" stroke-linecap="round"/><path d="M83 88Q75 64 83 53Q87 49 91 57Q85 37 99 36Q108 42 104 49Q123 47 129 67Q140 102 110 108Q91 108 83 88" fill="url(#${p}-feather)"/><ellipse cx="115" cy="73" rx="6" ry="7.2" fill="#5f5a49"/><circle cx="113.5" cy="70.5" r="2" fill="#fffdf0"/><ellipse cx="116" cy="89" rx="7" ry="4.5" fill="#e7b49b"/><path d="M129 79Q151 75 148 86Q142 96 128 90Z" fill="#dfa879"/><path d="M131 86l14-1" stroke="#c68e65" stroke-width="1.8" stroke-linecap="round"/>`);
   }
-  window.GardenArt = Object.freeze({ turtle, ladybug, butterfly, fish, flower, daisy, tulip, hyacinth, sunflower, mushroom, clover, tree, firefly, dragonfly, snail, lotus, rabbit, squirrel, duck });
+  function frog() {
+    return wrap('frog',`${shadow(80,136,51,7)}
+      <ellipse cx="53" cy="110" rx="25" ry="21" transform="rotate(-21 53 110)" fill="#719e58"/>
+      <ellipse cx="107" cy="110" rx="25" ry="21" transform="rotate(21 107 110)" fill="#719e58"/>
+      <ellipse cx="80" cy="102" rx="36" ry="32" fill="#93bd70"/>
+      <ellipse cx="80" cy="110" rx="24" ry="20" fill="#e6eabd"/>
+      <path d="M39 123Q28 130 31 136Q34 141 57 135L68 124M121 123Q132 130 129 136Q126 141 103 135L92 124" fill="#9ac47a" stroke="#719e58" stroke-width="2"/>
+      <path d="M60 100Q51 113 53 132Q54 139 71 134L68 113M100 100Q109 113 107 132Q106 139 89 134L92 113" fill="#a6cd82" stroke="#719e58" stroke-width="2"/>
+      <path d="M39 76Q31 41 55 39Q65 38 72 49L88 49Q95 38 105 39Q129 41 121 76Q120 100 80 102Q40 100 39 76Z" fill="#9ac47a"/>
+      <path d="M40 79Q53 90 80 91Q107 90 120 79Q116 99 80 101Q44 99 40 79Z" fill="#bdd899"/>
+      <ellipse cx="55" cy="57" rx="14" ry="15" fill="#fff9df"/><ellipse cx="105" cy="57" rx="14" ry="15" fill="#fff9df"/>
+      <ellipse cx="57" cy="58" rx="7" ry="9" fill="#364d36"/><ellipse cx="103" cy="58" rx="7" ry="9" fill="#364d36"/>
+      <circle cx="54" cy="54" r="2.8" fill="white"/><circle cx="100" cy="54" r="2.8" fill="white"/>
+      <ellipse cx="50" cy="80" rx="9" ry="5" fill="#efac9c"/><ellipse cx="110" cy="80" rx="9" ry="5" fill="#efac9c"/>
+      <path d="M69 78Q80 90 91 78" fill="none" stroke="#58794d" stroke-width="2.7" stroke-linecap="round"/>`);
+  }
+  function fox() {
+    return wrap('fox',`${shadow(79,141,58,6)}
+      <path d="M76 126Q22 154 16 120Q10 101 33 85Q26 106 48 115Q67 119 81 112Z" fill="#cc7750"/>
+      <path d="M16 120Q10 101 33 85Q26 102 39 112Q30 123 16 120Z" fill="#ffecd2"/>
+      <ellipse cx="73" cy="110" rx="35" ry="26" fill="#d78856"/>
+      <path d="M96 85Q119 100 109 130L109 140H92L89 123Q74 132 56 128L52 140H38Q34 129 43 114" fill="#df925d"/>
+      <path d="M37 133H54L52 140H38ZM91 133H109V140H92Z" fill="#794b42"/>
+      <path d="M77 86Q97 78 114 94L109 121Q96 126 90 114Z" fill="#fff0d7"/>
+      <path d="M73 67L63 32Q83 38 91 54M109 54Q126 33 138 35L133 73" fill="#cd7951"/>
+      <path d="M75 57L69 39L86 56M117 57L134 42L130 63" fill="#edb8a4"/>
+      <path d="M66 73Q70 50 100 50Q129 49 140 75Q135 93 105 102Q76 95 66 73Z" fill="#e59760"/>
+      <path d="M67 74Q89 70 103 88Q121 72 140 75Q135 94 105 102Q77 95 67 74Z" fill="#fff0d7"/>
+      <ellipse cx="87" cy="73" rx="4.4" ry="5.2" fill="#563e3a"/><ellipse cx="120" cy="73" rx="4.4" ry="5.2" fill="#563e3a"/>
+      <circle cx="86" cy="71" r="1.2" fill="white"/><circle cx="119" cy="71" r="1.2" fill="white"/>
+      <path d="M98 88Q104 84 111 88Q107 96 103 94Z" fill="#634543"/>`);
+  }
+  function raccoon() {
+    return wrap('raccoon',`${shadow(80,140,56,6)}
+      <path d="M50 123Q24 140 14 124Q6 109 25 99Q31 110 58 110Z" fill="#a19b92"/>
+      <path d="M20 102Q16 116 27 131L19 129Q11 125 12 117L13 110ZM31 107Q30 118 40 131L48 127Q40 117 42 111Z" fill="#6e6968"/>
+      <ellipse cx="78" cy="110" rx="35" ry="29" fill="#a19b93"/>
+      <ellipse cx="86" cy="113" rx="23" ry="24" fill="#e0d7c9"/>
+      <ellipse cx="62" cy="134" rx="13" ry="7" fill="#766f6b"/><ellipse cx="97" cy="134" rx="13" ry="7" fill="#766f6b"/>
+      <ellipse cx="52" cy="112" rx="10" ry="15" transform="rotate(22 52 112)" fill="#908983"/><ellipse cx="106" cy="112" rx="10" ry="15" transform="rotate(-22 106 112)" fill="#908983"/>
+      <circle cx="56" cy="52" r="15" fill="#8e8780"/><circle cx="108" cy="51" r="15" fill="#8e8780"/>
+      <circle cx="56" cy="52" r="8" fill="#d5b8af"/><circle cx="108" cy="51" r="8" fill="#d5b8af"/>
+      <path d="M42 73Q43 49 81 49Q119 49 124 73Q123 99 83 102Q46 100 42 73Z" fill="#b2aaa0"/>
+      <path d="M44 78Q59 65 82 76Q104 65 123 77Q117 93 100 92Q89 91 82 87Q73 92 64 92Q51 93 44 78Z" fill="#645e60"/>
+      <path d="M63 91Q82 81 102 91Q97 103 83 104Q68 103 63 91Z" fill="#f0e7d9"/>
+      <circle cx="64" cy="80" r="4.3" fill="#fffcf2"/><circle cx="101" cy="80" r="4.3" fill="#fffcf2"/>
+      <circle cx="65" cy="80" r="2.4" fill="#4e4648"/><circle cx="100" cy="80" r="2.4" fill="#4e4648"/>
+      <ellipse cx="82" cy="92" rx="5.3" ry="3.6" fill="#55474a"/>`);
+  }
+  function mouse() {
+    return wrap('mouse',`${shadow(86,139,54,6)}
+      <path d="M61 125Q31 141 16 128Q6 118 19 111" stroke="#c68e89" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <ellipse cx="72" cy="109" rx="36" ry="26" fill="#a9a4a2"/>
+      <ellipse cx="90" cy="116" rx="22" ry="18" fill="#ddd6cb"/>
+      <path d="M45 127Q42 138 59 138H69Q74 133 66 128M89 129Q90 139 112 137Q119 133 108 129" fill="#c18e88"/>
+      <circle cx="79" cy="63" r="20" fill="#a9a4a2"/><circle cx="80" cy="64" r="13" fill="#e3b6b1"/>
+      <circle cx="113" cy="60" r="18" fill="#aaa4a0"/><circle cx="113" cy="60" r="11" fill="#e3b6b1"/>
+      <path d="M65 89Q66 66 106 66Q126 78 143 96Q132 113 105 114Q76 113 65 89Z" fill="#c2bcb7"/>
+      <path d="M102 98Q121 97 141 97Q130 112 106 113Z" fill="#ede4d8"/>
+      <ellipse cx="109" cy="86" rx="5" ry="6.5" fill="#50474a"/><circle cx="108" cy="84" r="1.6" fill="white"/>
+      <ellipse cx="140" cy="97" rx="5" ry="4" fill="#bc7e7b"/>
+      <path d="M123 101l20 5m-22-2l16 9" stroke="#89817d" stroke-width="1.5" stroke-linecap="round"/>
+      <ellipse cx="109" cy="101" rx="7" ry="4" fill="#e6aaa4"/>`);
+  }
+  function seahorse() {
+    return wrap('seahorse',`
+      <path d="M73 60Q47 67 44 88Q58 90 74 79" fill="#f1bd92" stroke="#d08d70" stroke-width="2"/>
+      <path d="M72 27Q80 11 99 24L110 31L133 32Q144 40 131 46L109 49Q94 56 103 69Q123 105 103 126Q82 148 61 130Q48 119 56 106Q62 96 77 101Q88 106 83 114Q78 120 71 114" fill="none" stroke="#cd8469" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M72 27Q80 11 99 24L110 31L133 32Q144 40 131 46L109 49Q94 56 103 69Q123 105 103 126Q82 148 61 130Q48 119 56 106Q62 96 77 101Q88 106 83 114Q78 120 71 114" fill="none" stroke="#f3b382" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M88 49Q91 67 101 79Q114 100 104 116" fill="none" stroke="#ffdfb2" stroke-width="6" stroke-linecap="round"/>
+      <path d="M77 21Q74 11 83 13L90 17L97 13L101 25" fill="#dd926f"/>
+      <ellipse cx="97" cy="35" rx="5.2" ry="6.5" fill="#64514a"/><circle cx="96" cy="33" r="1.7" fill="#fffdf1"/>
+      <ellipse cx="108" cy="44" rx="6" ry="4" fill="#ed978c"/>`);
+  }
+  function strawberry() {
+    return wrap('strawberry',`${shadow(80,140,46,6)}
+      <path d="M80 139V54M78 103Q57 89 43 92M80 93Q102 77 123 79" fill="none" stroke="#658951" stroke-width="4"/>
+      <path d="M77 84Q45 82 38 58Q63 54 77 75Q69 48 87 36Q102 57 83 75Q104 57 127 63Q118 88 84 85Z" fill="#89b069"/>
+      <path d="M39 93Q22 92 28 111L41 127Q47 130 51 121Q66 101 54 94Z M111 78Q93 78 99 96L111 114Q117 117 121 107Q136 87 125 81Z" fill="#d66d66"/>
+      <path d="M31 94l10-7l4 7l10-2l-8 9l-7-3ZM101 81l10-8l6 7l11 1l-10 6l-7-3Z" fill="#749658"/>
+      <path d="M37 107l1 3m7 1l-1 3m66-21l1 3m8 0l-1 3" stroke="#ffe0af" stroke-width="2" stroke-linecap="round"/>`);
+  }
+  function lavender() {
+    return wrap('lavender',`${shadow(80,140,44,6)}
+      <path d="M79 140L55 51M81 140L81 33M83 140L111 57" stroke="#72916a" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M73 128Q49 116 43 109Q62 108 75 121M87 127Q105 111 122 110Q114 122 86 134" fill="#99ae83"/>
+      ${[[55,51],[81,33],[111,57]].map(([x,y])=>`<g transform="translate(${x} ${y})"><ellipse cy="-9" rx="6" ry="8" fill="#baa1ce"/><ellipse cx="-5" rx="8" ry="5" fill="#9681b6"/><ellipse cx="5" rx="8" ry="5" fill="#b49bc8"/><ellipse cx="-5" cy="10" rx="8" ry="5" fill="#ac92c3"/><ellipse cx="5" cy="10" rx="8" ry="5" fill="#947db3"/><ellipse cy="19" rx="8" ry="4.5" fill="#aa93c2"/></g>`).join('')}`);
+  }
+
+  function beetle() {
+    return wrap('beetle',`${shadow(80,138,46,6)}
+      <path d="M50 79L31 63L21 67M48 97L25 94L17 104M52 114L35 126L34 137M110 79L129 63L139 67M112 97L135 94L143 104M108 114L125 126L126 137" fill="none" stroke="#6e564f" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="80" cy="98" rx="35" ry="39" fill="#926855"/>
+      <path d="M79 67Q44 66 46 100Q50 137 79 137ZM82 67Q116 66 114 100Q110 137 82 137Z" fill="#b48264"/>
+      <path d="M53 85Q60 74 69 75M97 78Q105 82 108 90" fill="none" stroke="#f5cf9e" stroke-width="4" stroke-linecap="round" opacity=".62"/>
+      <ellipse cx="80" cy="59" rx="24" ry="18" fill="#765951"/>
+      <path d="M74 55Q78 41 72 35Q64 31 64 20L70 22Q75 29 82 27Q89 26 93 18L96 19Q97 32 87 35Q84 44 86 54Z" fill="#815e4f"/>
+      <circle cx="66" cy="57" r="5.5" fill="#fff1cc"/><circle cx="95" cy="57" r="5.5" fill="#fff1cc"/>
+      <circle cx="67" cy="58" r="2.7" fill="#504348"/><circle cx="94" cy="58" r="2.7" fill="#504348"/>`);
+  }
+  function bird() {
+    return wrap('bird',`${shadow(80,140,46,6)}
+      <path d="M53 106Q27 104 20 82Q36 90 54 87" fill="#89a7b2"/>
+      <path d="M68 126l-5 14m25-13l4 13m-37 0h16m14 0h18" fill="none" stroke="#b48560" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="77" cy="104" rx="41" ry="30" fill="#9fbcc4"/>
+      <path d="M77 124Q110 129 115 101Q105 83 79 99" fill="#eaf0dc"/>
+      <path d="M52 87Q85 84 92 110Q64 123 52 87Z" fill="#7d9faa"/>
+      <path d="M58 97Q66 106 80 106" fill="none" stroke="#b9d1cf" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="101" cy="71" r="29" fill="#adcad0"/>
+      <path d="M88 44Q81 28 95 33L104 43Q107 29 114 35L116 47" fill="#8caeb9"/>
+      <path d="M125 74l20 8l-19 7Z" fill="#d9a565"/>
+      <ellipse cx="110" cy="69" rx="6" ry="7.2" fill="#465c60"/><circle cx="108" cy="67" r="2" fill="#fffbef"/>
+      <ellipse cx="114" cy="85" rx="7" ry="4" fill="#e6b4a2"/>`);
+  }
+  function owl() {
+    return wrap('owl',`${shadow(80,141,45,6)}
+      <path d="M54 127l-4 13m10-10l3 9m33-9l-3 9m10-12l6 13" fill="none" stroke="#be8a61" stroke-width="4" stroke-linecap="round"/>
+      <ellipse cx="80" cy="94" rx="38" ry="43" fill="#bc9273"/>
+      <ellipse cx="50" cy="102" rx="15" ry="29" transform="rotate(13 50 102)" fill="#98765e"/>
+      <ellipse cx="110" cy="102" rx="15" ry="29" transform="rotate(-13 110 102)" fill="#98765e"/>
+      <ellipse cx="80" cy="112" rx="25" ry="24" fill="#efdebd"/>
+      <path d="M65 111q5 9 10 0m9 3q5 9 10 0m-23 9q5 9 10 0" fill="none" stroke="#c9ae8d" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M44 62l-3-28l22 11q17-7 34 0l23-11l-5 29q0 30-35 31q-35-1-36-32Z" fill="#ae856b"/>
+      <path d="M51 67Q51 49 66 49Q75 49 80 62Q87 49 98 49Q110 49 111 66Q110 85 82 87Q54 86 51 67Z" fill="#f3e0ba"/>
+      <circle cx="66" cy="66" r="10" fill="#d5a773"/><circle cx="96" cy="66" r="10" fill="#d5a773"/>
+      <circle cx="66" cy="66" r="6.4" fill="#594b49"/><circle cx="96" cy="66" r="6.4" fill="#594b49"/>
+      <circle cx="64" cy="64" r="2" fill="#fffdf4"/><circle cx="94" cy="64" r="2" fill="#fffdf4"/>
+      <path d="M74 78Q80 73 87 78L80 86Z" fill="#c98f5a"/>`);
+  }
+
+  window.GardenArt = Object.freeze({ turtle, ladybug, butterfly, fish, flower, daisy, tulip, hyacinth, sunflower, mushroom, clover, tree, firefly, dragonfly, snail, lotus, rabbit, squirrel, duck, frog, fox, raccoon, mouse, seahorse, strawberry, lavender, beetle, bird, owl });
 })();
